@@ -23,7 +23,27 @@
         "command": "on-premise-llm-openwebui-chat.openChat",
         "title": "Opens On-Prem LLM OpenWebUI Chat"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "On-Premise LLM OpenWebUI Chat",
+      "properties": {
+        "onPremiseLlmChat.openwebuiUrl": {
+          "type": "string",
+          "default": "",
+          "description": "OpenWebUI base URL (e.g., http://localhost:3000)"
+        },
+        "onPremiseLlmChat.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenWebUI API key for authentication"
+        },
+        "onPremiseLlmChat.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default model to use (e.g., llama3.2:latest)"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

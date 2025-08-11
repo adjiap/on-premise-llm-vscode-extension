@@ -23,12 +23,23 @@ export class OpenWebUIService {
   private baseUrl: string;
   private apiKey: string;
 
-  constructor(baseUrl: string = 'http://localhost:3000', apiKey: string = '') {
+  constructor(baseUrl: string, apiKey: string) {
+    if (!baseUrl) {
+      throw new Error('OpenWebUI base URL is required');
+    }
+    if (!apiKey) {
+      throw new Error('OpenWebUI API key is required');
+    }
+
     this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     this.apiKey = apiKey;
   }
 
-  async sendChat(messages: ChatMessage[], model: string = 'llama3.2'): Promise<string> {
+  async sendChat(messages: ChatMessage[], model: string): Promise<string> {
+    if (!model) {
+      throw new Error('Model name is required')
+    }
+
     try {
       const request: ChatRequest = {
         model: model,
@@ -61,7 +72,7 @@ export class OpenWebUIService {
         `${this.baseUrl}/ollama/api/tags`,
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': 'Bearer ${this.apiKey}',
             'Content-Type': 'application/json'
           }
         }
