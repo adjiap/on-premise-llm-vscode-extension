@@ -149,4 +149,27 @@ npm install react react-dom
 npm install -D @types/react @types/react-dom webpack webpack-cli css-loader style-loader ts-loader html-webpack-plugin
 ```
 
+## Developer Packaging & Install
+
+Once you're ready to package the extension, run this:
+
+```sh
+# Compile everything first
+npm run compile
+
+# Package it 
+npx vsce package
+# You'll get something like `on-premise-llm-openwebui-chat-0.0.1.vsix`
+```
+
+And install/deinstall it using
+
+```sh
+# Install
+code --install-extension on-premise-llm-openwebui-chat-0.0.1
+
+# Uninstall
+code --uninstall-extension adjiap.on-premise-llm-openwebui-chat
+```
+
 **Enjoy!**
