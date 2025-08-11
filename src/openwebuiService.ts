@@ -1,4 +1,6 @@
-import axios, { AxiosResponse } from 'axios';
+import * as https from 'https';
+import * as http from 'http';
+import { URL } from 'url';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -35,6 +37,52 @@ export class OpenWebUIService {
     this.apiKey = apiKey;
   }
 
+  private async makeRequest(endpoint: string, method: string = 'GET', data?: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const url = new URL(`${this.baseUrl}${endpoint}`);
+      const isHttps = url.protocol === 'https:';
+      const client = isHttps ? https : http;
+
+      const options = {
+        hostname: url.hostname,
+        port: url.port || (isHttps ? 443 : 80),
+        path: url.pathname,
+        method: method,
+        headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+        }
+      };
+
+      const req = client.request(options, (res) => {
+        let responseData = '';
+        
+        res.on('data', (chunk) => {
+          responseData += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(responseData);
+            resolve(parsed);
+          } catch (error) {
+            reject(new Error(`Invalid JSON response: ${responseData}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        reject(error);
+      });
+
+      if (data) {
+        req.write(JSON.stringify(data));
+      }
+
+      req.end();
+    });
+  }
+
   async sendChat(messages: ChatMessage[], model: string): Promise<string> {
     if (!model) {
       throw new Error('Model name is required')
@@ -47,38 +95,23 @@ export class OpenWebUIService {
         stream: false
       };
 
-      const response: AxiosResponse<ChatResponse> = await axios.post(
-        `${this.baseUrl}/ollama/api/chat`,
-        request,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 30000 // 30 seconds
-        }
+      const response: ChatResponse = await this.makeRequest(
+        '/ollama/api/chat',
+        'POST',
+        request
       );
 
-      return response.data.message.content;
+      return response.message.content;
     } catch (error) {
       console.error('OpenWebUI API Error:', error);
-      throw new Error('Failed to get response from Ollama: ${error}');
+      throw new Error(`Failed to get response from Ollama: ${error}`);
     }
   }
 
   async getAvailableModels(): Promise<string[]> {
     try {
-      const response = await axios.get(
-        `${this.baseUrl}/ollama/api/tags`,
-        {
-          headers: {
-            'Authorization': 'Bearer ${this.apiKey}',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      return response.data.models?.map((model: any) => model.name) || [];
+      const response = await this.makeRequest('/ollama/api/tags');
+      return response.models?.map((model: any) => model.name) || [];
     } catch (error) {
       console.error('Error fetching models:', error);
       return [];
