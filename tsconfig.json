@@ -8,6 +8,11 @@
 			"DOM",
 			"DOM.Iterable"
 		],
+		// Load explicit types
+		"types": [
+			"vscode",
+			"node",
+		],
 		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true,   /* enable all strict type-checking options */
