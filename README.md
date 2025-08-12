@@ -134,6 +134,9 @@ cd on-premise-llm-openwebui-chat
 # Install dependencies
 npm install
 
+# For easy WebView development
+npm install @vscode/webview-ui-toolkit 
+
 # Compile TypeScript
 npm run compile
 
