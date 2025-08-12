@@ -75,6 +75,25 @@ export function activate(context: vscode.ExtensionContext) {
 								});
 						}
 						break;
+					case 'refreshModels':
+						try {
+							console.log('Fetching available models...');
+							const models = await service.getAvailableModels();
+
+							// Send models back to webview
+							panel.webview.postMessage({
+									command: 'updateModels',
+									models: models
+							});
+						} catch (error) {
+							console.error('Error fetching models:', error);
+							panel.webview.postMessage({
+									command: 'updateModels',
+									models: [], // Empty array on error
+									error: 'Failed to load models'
+							});
+						}
+						break;
 				}
 			},
 			undefined,
@@ -195,14 +214,53 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 				messages.scrollTop = messages.scrollHeight;
 			}
 			
+			function updateModelDropdown(models, error) {
+				const dropdown = document.getElementById('modelSelect');
+				dropdown.innerHTML = ''; // Clear existing options
+	
+				if (error) {
+					const option = document.createElement('vscode-option');
+					option.value = '';
+					option.textContent = 'Error loading models';
+					dropdown.appendChild(option);
+					return;
+				}
+
+				if (models.length === 0) {
+					const option = document.createElement('vscode-option');
+					option.value = '';
+					option.textContent = 'No models found';
+					dropdown.appendChild(option);
+					return;
+				}
+
+				// Add each model as an option
+				models.forEach(model => {
+					const option = document.createElement('vscode-option');
+					option.value = model;
+					option.textContent = model;
+					dropdown.appendChild(option);
+				});
+		}
+			
 			// Listen for messages from extension
 			window.addEventListener('message', event => {
 				const message = event.data;
+
 				if (message.command === 'receiveMessage') {
 					addMessage(message.text, message.sender);
 				}
+
+				if (message.command === 'updateModels') {
+        	updateModelDropdown(message.models, message.error);
+    		}
 			});
-			
+
+			// Automatically fetch models on startup
+			window.addEventListener('load', () => {
+				refreshModels();
+			});
+
 			// Handle Enter key
 			document.getElementById('messageInput').addEventListener('keypress', function(e) {
 				if (e.key === 'Enter') {
