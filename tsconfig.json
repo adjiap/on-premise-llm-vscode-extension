@@ -12,6 +12,7 @@
 		"types": [
 			"vscode",
 			"node",
+			"mocha"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
