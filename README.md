@@ -149,6 +149,46 @@ npm install react react-dom
 npm install -D @types/react @types/react-dom webpack webpack-cli css-loader style-loader ts-loader html-webpack-plugin
 ```
 
+## Developer workflow
+
+> [!TIP]
+> Whenever you run development session, have autocompile on
+> ```sh
+> npm run watch
+> ```
+
+### 1. Pre-Release Preparation
+
+```sh
+# 1. Stop autocompile (Ctrl+C)
+
+# 2. Compile everything
+npm run compile
+
+# 3. Check Typescript/Lint
+npm run lint
+
+# 4. Run tests
+npm test
+```
+
+### 2. Version Changes
+
+```sh
+npm version patch   # 0.1.0 -> 0.1.1 (bug fixes)
+npm version minor   # 0.1.0 -> 0.2.0 (new features)
+npm version major   # 0.1.0 -> 1.0.0 (breaking changes)
+```
+
+### 3. Git package and release
+
+```sh
+git add `<name-of-files>`
+git commit -m "commit message"
+# Because we versioned using `npm version minor` or others, we can run this.
+git push origin <branch-name> --follow-tags 
+```
+
 ## Developer Packaging & Install
 
 Once you're ready to package the extension, run this:
@@ -166,7 +206,7 @@ And install/deinstall it using
 
 ```sh
 # Install
-code --install-extension on-premise-llm-openwebui-chat-0.0.1
+code --install-extension on-premise-llm-openwebui-chat-0.0.1.vsix
 
 # Uninstall
 code --uninstall-extension adjiap.on-premise-llm-openwebui-chat
