@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
 										sender: 'assistant'
 								});
 						}
-				break;
+						break;
 				}
 			},
 			undefined,
