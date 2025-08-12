@@ -111,6 +111,7 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Ollama Chat</title>
+		<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
 		<style>
 			body { 
 				font-family: var(--vscode-font-family);
@@ -124,6 +125,12 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 				display: flex;
 				flex-direction: column;
 				max-width: 800px;
+			}
+			.model-selection {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 15px;
 			}
 			.messages {
 				flex: 1;
@@ -160,24 +167,23 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 				color: var(--vscode-input-foreground);
 				border-radius: 4px;
 			}
-			button {
-				padding: 10px 20px;
-				background: var(--vscode-button-background);
-				color: var(--vscode-button-foreground);
-				border: none;
-				cursor: pointer;
-				border-radius: 4px;
-			}
-			button:hover {
-				background: var(--vscode-button-hoverBackground);
-			}
 		</style>
 	</head>
 	<body>
 		<div class="chat-container">
+
+			<div class="model-selection">
+				<label for="modelSelect">Model:</label>
+				<vscode-dropdown id="modelSelect">
+					<vscode-option value="">Loading models...</vscode-option>
+				</vscode-dropdown>
+				<vscode-button appearance="secondary" onclick="refreshModels()">🔄</vscode-button>
+			</div>
+
 			<div class="messages" id="messages">
 				<div class="message assistant">Welcome to Ollama Chat! Type a message below to get started.</div>
 			</div>
+
 			<div class="input-container">
 				<input type="text" id="messageInput" placeholder="Type your message...">
 				<button onclick="sendMessage()">Send</button>
@@ -186,7 +192,13 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 		
 		<script>
 			const vscode = acquireVsCodeApi();
-			
+
+			function refreshModels() {
+				vscode.postMessage({
+					command: 'refreshModels'
+				});
+			}
+
 			function sendMessage() {
 				const input = document.getElementById('messageInput');
 				const text = input.value.trim();
