@@ -1,6 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { ConfigManager } from './configManager';
+import { OpenWebUIService } from './openwebuiService';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -8,13 +10,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('On-Premise LLM OpenWebUI Chat is now active!');
+	console.log('On-Premise LLM OpenWebUI Chat activated!');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-chat.openChat', () => {
+	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-chat.openChat', async () => {
 		// The code you place here will be executed every time your command is executed
+		const config = await ConfigManager.ensureConfig();
+		if (!config) {
+			vscode.window.showErrorMessage('OpenWebUI Chat coniguration cancelled.');
+			return;
+		}
+
+		const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
+
+		console.log('On-Premise LLM OpenWebUI Chat is active!')
+
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Opening On-Prem Chat...');
 
@@ -35,17 +47,34 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// Handling messages from webview
 		panel.webview.onDidReceiveMessage(
-			message => {
+			async message => {
 				switch (message.command) {
 					case 'sendMessage':
-						console.log('Received message:', message.text);
-						// For now, just echo back
-						panel.webview.postMessage({
-							command: 'receiveMessage',
-							text: `Echo: ${message.text}`,
-							sender: 'assistant'
-						});
-						break;
+						try {
+							console.log('Received message:', message.text);
+							// Send to OpenWebUI
+							const response = await service.sendChat(
+								[
+									{ role: 'user', content: message.text }
+								],
+								config.defaultModel
+							);
+							
+							// Send response back to webview
+							panel.webview.postMessage({
+									command: 'receiveMessage',
+									text: response,
+									sender: 'assistant'
+							});
+						} catch (error) {
+								console.error('Chat error:', error);
+								panel.webview.postMessage({
+										command: 'receiveMessage',
+										text: `Error: ${error}`,
+										sender: 'assistant'
+								});
+						}
+				break;
 				}
 			},
 			undefined,
