@@ -2,7 +2,7 @@
   "name": "on-premise-llm-openwebui-chat",
   "displayName": "On-Premise LLM OpenWebUI Chat",
   "description": "VSCode Extension to communicate with an On-Premise OpenWebUI Ollama model",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "adjiap",
   "repository": {
     "type": "git",
@@ -41,6 +41,11 @@
           "type": "string",
           "default": "",
           "description": "Default model to use (e.g., llama3.2:latest)"
+        },
+        "onPremiseLlmChat.systemPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "System prompt for LLM model (e.g., 'Only give short answers, with what is asked for')"
         }
       }
     }

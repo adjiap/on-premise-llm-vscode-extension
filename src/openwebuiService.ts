@@ -83,15 +83,29 @@ export class OpenWebUIService {
     });
   }
 
-  async sendChat(messages: ChatMessage[], model: string): Promise<string> {
+  async sendChat(messages: ChatMessage[], model: string, systemPrompt?: string): Promise<string> {
     if (!model) {
       throw new Error('Model name is required')
     }
 
     try {
+      // Prepare messages array - add system prompt if provided
+      const chatMessages: ChatMessage[] = [];
+
+      if (systemPrompt && systemPrompt.trim()){
+        chatMessages.push(
+          {
+            role: 'user',
+            content: systemPrompt
+          }
+        );
+      }
+
+      chatMessages.push(...messages);
+
       const request: ChatRequest = {
         model: model,
-        messages: messages,
+        messages: chatMessages,
         stream: false
       };
 
