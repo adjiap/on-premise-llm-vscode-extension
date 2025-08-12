@@ -4,6 +4,13 @@ import * as vscode from 'vscode';
 import { ConfigManager } from './configManager';
 import { OpenWebUIService } from './openwebuiService';
 
+interface WebviewMessage {
+    command: string;
+    text?: string;
+    models?: string[];
+    error?: string;
+}
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -47,10 +54,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// Handling messages from webview
 		panel.webview.onDidReceiveMessage(
-			async message => {
+			async (message: WebviewMessage) => {
 				switch (message.command) {
 					case 'sendMessage':
 						try {
+							// Validate message
+							if (!message.text || message.text.trim() === '') {
+								console.error('Empty message received');
+								return;
+							}
+
 							console.log('Received message:', message.text);
 							// Send to OpenWebUI
 							const response = await service.sendChat(
