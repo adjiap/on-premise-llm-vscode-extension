@@ -70,7 +70,8 @@ export function activate(context: vscode.ExtensionContext) {
 								[
 									{ role: 'user', content: message.text }
 								],
-								config.defaultModel
+								config.defaultModel,
+								config.systemPrompt
 							);
 							
 							// Send response back to webview

@@ -41,6 +41,11 @@
           "type": "string",
           "default": "",
           "description": "Default model to use (e.g., llama3.2:latest)"
+        },
+        "onPremiseLlmChat.systemPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "System prompt for LLM model (e.g., 'Only give short answers, with what is asked for')"
         }
       }
     }

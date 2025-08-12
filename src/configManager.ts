@@ -4,6 +4,7 @@ export interface ChatConfig {
   openwebuiUrl: string;
   apiKey: string;
   defaultModel: string;
+  systemPrompt?: string;    // optional
 }
 
 export class ConfigManager {
@@ -15,6 +16,7 @@ export class ConfigManager {
     const openwebuiUrl = config.get<string>('openwebuiUrl') || '';
     const apiKey = config.get<string>('apiKey') || '';
     const defaultModel = config.get<string>('defaultModel') || '';
+    const systemPrompt = config.get<string>('systemPrompt') || '';
 
     // Check if all required settings are present
     if (!openwebuiUrl || !apiKey || !defaultModel) {
@@ -24,7 +26,8 @@ export class ConfigManager {
     return {
       openwebuiUrl,
       apiKey,
-      defaultModel
+      defaultModel,
+      systemPrompt
     };
   }
 
@@ -76,7 +79,8 @@ export class ConfigManager {
     return {
       openwebuiUrl,
       apiKey,
-      defaultModel
+      defaultModel,
+      systemPrompt: '' // Setting empty string as default
     };
   }
 
