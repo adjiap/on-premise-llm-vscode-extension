@@ -1,15 +1,33 @@
 import * as vscode from 'vscode';
 
+/**
+ * Configuration interface for the On-Premise LLM Chat extension.
+ * Defines all settings required for OpenWebUI integration
+ */
 export interface ChatConfig {
+  /** Base URL for the OpenWebUI Service */
   openwebuiUrl: string;
+  /** API key for accessing OpenWebUI */
   apiKey: string;
+  /** Default model name to be used for chat */
   defaultModel: string;
+  /** Optional system prompt for conversations */
   systemPrompt?: string;    // optional
 }
 
+/**
+ * Manages configuration settings for the OpenWebUI chat extension.
+ * Handles reading from VSCode settings, prompting users for missing config,
+ * and persisting configuration changes.
+ */
 export class ConfigManager {
   private static readonly EXTENSION_ID = 'onPremiseLlmChat';
 
+  /**
+   * Prompts the user to enter configuration values through input dialogs.
+   * Validates inputs and saves them to VSCode global settings.
+   * @returns The configured settings, or null if user cancelled
+   */
   static async getConfig(): Promise<ChatConfig | null> {
     const config = vscode.workspace.getConfiguration(this.EXTENSION_ID);
     
@@ -31,6 +49,11 @@ export class ConfigManager {
     };
   }
 
+   /**
+   * Prompts the user to enter configuration values through input dialogs.
+   * Validates inputs and saves them to VSCode global settings.
+   * @returns The configured settings, or null if user cancelled
+   */
   static async promptForConfig(): Promise<ChatConfig | null> {
     // Prompt for OpenWebUI URL
     const openwebuiUrl = await vscode.window.showInputBox({
@@ -84,6 +107,11 @@ export class ConfigManager {
     };
   }
 
+   /**
+   * Ensures configuration is available, prompting user if needed.
+   * This is the main entry point for getting valid configuration.
+   * @returns Valid configuration object, or null if user declined to configure
+   */
   static async ensureConfig(): Promise<ChatConfig | null> {
       let config = await this.getConfig();
       
