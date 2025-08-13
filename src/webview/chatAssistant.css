@@ -1,0 +1,81 @@
+/**
+ * Chat Webview Styles
+ * 
+ * Styling for the On-Premise LLM VSCode Extension chat interface.
+ * Uses VSCode CSS variables for theme consistency across light/dark modes.
+ * 
+ * @author adjia
+ * @since 2025-08-13
+ */
+
+/* Base layout and theme integration */
+body {
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-foreground);
+    background-color: var(--vscode-editor-background);
+    margin: 0;
+    padding: 20px;
+}
+
+/* Main container layout */
+.chat-container {
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+}
+
+/* Model selection dropdown area */
+.model-selection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+/* Scrollable messages area */
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--vscode-panel-border);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+/* Individual message styling */
+.message {
+    margin-bottom: 12px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* User message appearance */
+.message.user {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    margin-left: 20%;
+}
+
+/* Assistant message appearance */
+.message.assistant {
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    margin-right: 20%;
+}
+
+/* Input controls container */
+.input-container {
+    display: flex;
+    gap: 10px;
+}
+
+/* Message input field */
+#messageInput {
+    flex: 1;
+    padding: 10px;
+    background: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    color: var(--vscode-input-foreground);
+    border-radius: 4px;
+}
