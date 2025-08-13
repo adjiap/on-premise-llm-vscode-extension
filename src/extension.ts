@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 
 		// Set HTML Content
-		panel.webview.html = getWebViewContent(panel.webview, context.extensionUri)
+		panel.webview.html = getWebViewContent(panel.webview, context.extensionUri);
 
 		// Handling messages from webview
 		panel.webview.onDidReceiveMessage(
@@ -74,6 +74,14 @@ export function activate(context: vscode.ExtensionContext) {
 					// Handles user chat message and get responses
 					case "sendMessage":
 						try {
+							console.log("=== SENDMESSAGE DEBUG ===");
+              console.log(
+                "Full message object:",
+                JSON.stringify(message, null, 2)
+              );
+              console.log("Message chatType:", message.chatType);
+              console.log("Message text:", message.text);
+
 							// Validate message
 							if (!message.text || message.text.trim() === "") {
 								console.error("Empty message received");
@@ -92,6 +100,8 @@ export function activate(context: vscode.ExtensionContext) {
 							);
 
 							// Send response back to webview
+							console.log("Sending response with chatType:", message.chatType || "quick");
+
 							panel.webview.postMessage({
 								command: "receiveMessage",
 								text: response,

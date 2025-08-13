@@ -67,19 +67,24 @@ function refreshModels() {
  * @param {string} chatType - Either 'quick' or 'saved' to determine chat mode
  */
 function sendMessage(chatType) {
+  console.log("=== SENDMESSAGE JS DEBUG ===");
+  console.log("chatType parameter:", chatType);
+
   const input = document.getElementById(`${chatType}-messageInput`);
   const text = input.value.trim();
 
   if (text) {
     // Display user message immediately
     addMessage(text, "user", chatType);
-
-    // Send to extension with chat type information
-    vscode.postMessage({
+    const messageToSend = {
       command: "sendMessage",
       text: text,
       chatType: chatType, // Add this to distinguish between quick/saved
-    });
+    };
+
+    // Send to extension with chat type information
+    console.log("Sending message:", JSON.stringify(messageToSend, null, 2));
+    vscode.postMessage(messageToSend);
 
     // Clear input field
     input.value = "";
