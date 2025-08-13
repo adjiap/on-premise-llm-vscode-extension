@@ -94,6 +94,10 @@ body {
   color: var(--vscode-foreground);
   background: transparent;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* This spreads the text and icon */
 }
 
 .tab:hover {
@@ -126,4 +130,16 @@ body {
   padding: 15px;
   margin-bottom: 15px;
   border-radius: 4px;
+}
+
+/* Tool tip for descriptions */
+.tooltip-icon {
+  margin-left: 8px;
+  opacity: 0.6;
+  cursor: help;
+  font-size: 14px;
+}
+
+.tooltip-icon:hover {
+  opacity: 1;
 }

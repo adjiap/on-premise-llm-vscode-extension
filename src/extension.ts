@@ -173,8 +173,14 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
     <body>
         <div class="chat-container">
 			<div class="tab-container">
-				<div class="tab active" onclick="switchTab('quick')">Quick-Chat</div>
-				<div class="tab" onclick="switchTab('saved')">Saved-Chat</div>
+				<div class="tab active" onclick="switchTab('quick')">
+					Quick-Chat
+					<span class="tooltip-icon" title="Single prompts without conversation memory. Each message is independent from another.">$(question)</span>
+				</div>
+				<div class="tab" onclick="switchTab('saved')">
+					Saved-Chat
+					<span class="tooltip-icon" title="Continuous conversation with memory. The AI remembers previous messages in the chat.">$(question)</span>
+				</div>
 			</div>
 
             <div class="model-selection">
@@ -182,7 +188,7 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
                 <vscode-dropdown id="modelSelect">
                     <vscode-option value="">Loading models...</vscode-option>
                 </vscode-dropdown>
-                <vscode-button appearance="secondary" onclick="refreshModels()">🔄</vscode-button>
+                <vscode-button appearance="secondary" onclick="refreshModels()">$(repo-sync)</vscode-button>
             </div>
 
             <div id="quick-tab" class="tab-content active">
