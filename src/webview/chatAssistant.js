@@ -7,6 +7,10 @@
  * @author adjia
  * @since 2025-08-13
  *
+ * Handles tabbed interface with Quick Chat and Saved Chat modes.
+ * - Quick-Chat: Single message/response (no memory)
+ * - Saved-Chat: Conversation with memory
+ * 
  * Communication Protocol:
  * - refreshModels: Request available models from OpenWebUI
  * - sendMessage: Send user chat message to extension
@@ -16,6 +20,26 @@
 
 // VSCode API reference for webview communication
 const vscode = acquireVsCodeApi();
+
+/**
+ * Switches between Quick Chat and Saved Chat tabs.
+ * @param {string} tabName - Either 'quick' or 'saved'
+ */
+function switchTab(tabName) {
+  // Remove active class from all tabs and content
+  document
+    .querySelectorAll(".tab")
+    .forEach((tab) => tab.classList.remove("active"));
+  document
+    .querySelectorAll(".tab-content")
+    .forEach((content) => content.classList.remove("active"));
+
+  // Add active class to selected tab and content
+  const tabs = document.querySelectorAll(".tab");
+  const tabIndex = tabName === "quick" ? 0 : 1;
+  tabs[tabIndex].classList.add("active");
+  document.getElementById(`${tabName}-tab`).classList.add("active");
+}
 
 /**
  * Requests available models from the OpenWebUI service.
@@ -29,33 +53,42 @@ function refreshModels() {
 
 /**
  * Sends user message to the LLM service.
- * Validates input, displays message locally, and forwards to extension.
+ * @param {string} chatType - Either 'quick' or 'saved' to determine chat mode
  */
-function sendMessage() {
-  const input = document.getElementById("messageInput");
+function sendMessage(chatType) {
+  const input = document.getElementById(`${chatType}-messageInput`);
   const text = input.value.trim();
 
   if (text) {
-    addMessage(text, "user");
+    // Display user message immediately
+    addMessage(text, "user", chatType);
+
+    // Send to extension with chat type information
     vscode.postMessage({
       command: "sendMessage",
       text: text,
+      chatType: chatType, // Add this to distinguish between quick/saved
     });
+
+    // Clear input field
     input.value = "";
   }
 }
 
 /**
- * Adds a message to the chat display.
+ * Adds a message to the specified chat display.
  * @param {string} text - The message content to display
  * @param {string} sender - Message sender type ('user' or 'assistant')
+ * @param {string} chatType - Either 'quick' or 'saved'
  */
-function addMessage(text, sender) {
-  const messages = document.getElementById("messages");
+function addMessage(text, sender, chatType) {
+  const messages = document.getElementById(`${chatType}-messages`);
   const messageDiv = document.createElement("div");
   messageDiv.className = "message " + sender;
   messageDiv.textContent = text;
   messages.appendChild(messageDiv);
+
+  // Auto-scroll to show latest message
   messages.scrollTop = messages.scrollHeight;
 }
 
@@ -93,12 +126,19 @@ function updateModelDropdown(models, error) {
 }
 
 /**
- * Clears all messages from the chat display.
- * Provides immediate UI feedback for conversation reset.
+ * Clears all messages from the specified chat display.
+ * @param {string} chatType - Either 'quick' or 'saved'
  */
-function clearMessages() {
-  const messages = document.getElementById("messages");
+function clearMessages(chatType) {
+  const messages = document.getElementById(`${chatType}-messages`);
   messages.innerHTML = "";
+
+  // For saved chat, also send clear command to extension to reset memory
+  if (chatType === "saved") {
+    vscode.postMessage({
+      command: "clearSavedChat",
+    });
+  }
 }
 
 // Event Listeners
@@ -111,7 +151,9 @@ window.addEventListener("message", (event) => {
   const message = event.data;
 
   if (message.command === "receiveMessage") {
-    addMessage(message.text, message.sender);
+    // Add message to the appropriate chat based on response
+    const chatType = message.chatType || "quick"; // Default to quick if not specified
+    addMessage(message.text, message.sender, chatType);
   }
 
   if (message.command === "updateModels") {
@@ -128,13 +170,18 @@ window.addEventListener("load", () => {
 });
 
 /**
- * Handle Enter key in message input for better UX.
- * Allows sending messages without clicking the Send button.
+ * Handle Enter key in message inputs for better UX.
  */
-document
-  .getElementById("messageInput")
-  .addEventListener("keypress", function (e) {
-    if (e.key === "Enter") {
-      sendMessage();
+document.addEventListener("DOMContentLoaded", () => {
+  // Add Enter key listeners for both input fields
+  ["quick", "saved"].forEach((chatType) => {
+    const input = document.getElementById(`${chatType}-messageInput`);
+    if (input) {
+      input.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          sendMessage(chatType);
+        }
+      });
     }
   });
+});

@@ -11,8 +11,9 @@ import { OpenWebUIService } from './openwebuiService';
 interface WebviewMessage {
     command: string;
     text?: string;
-    models?: string[];
+    models?: string[];  // Only for populating dropdown of models available
     error?: string;
+		chatType?: string;
 }
 
 /**
@@ -61,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 				retainContextWhenHidden: true,
 				localResourceRoots: [context.extensionUri]
 			}
-		)
+		);
 
 		// Set HTML Content
 		panel.webview.html = getWebViewContent(panel.webview, context.extensionUri)
@@ -71,58 +72,68 @@ export function activate(context: vscode.ExtensionContext) {
 			async (message: WebviewMessage) => {
 				switch (message.command) {
 					// Handles user chat message and get responses
-					case 'sendMessage':
+					case "sendMessage":
 						try {
 							// Validate message
-							if (!message.text || message.text.trim() === '') {
-								console.error('Empty message received');
+							if (!message.text || message.text.trim() === "") {
+								console.error("Empty message received");
 								return;
 							}
 
-							console.log('Received message:', message.text);
+							console.log(
+								"Received message:", message.text,
+								"Chat type:", message.chatType
+							);
 							// Send to OpenWebUI
 							const response = await service.sendChat(
-								[
-									{ role: 'user', content: message.text }
-								],
+								[{ role: "user", content: message.text }],
 								config.defaultModel,
 								config.systemPrompt
 							);
-							
+
 							// Send response back to webview
 							panel.webview.postMessage({
-									command: 'receiveMessage',
-									text: response,
-									sender: 'assistant'
+								command: "receiveMessage",
+								text: response,
+								sender: "assistant",
+								chatType: message.chatType || 'quick',
 							});
 						} catch (error) {
-								console.error('Chat error:', error);
-								panel.webview.postMessage({
-										command: 'receiveMessage',
-										text: `Error: ${error}`,
-										sender: 'assistant'
-								});
+							console.error("Chat error:", error);
+							panel.webview.postMessage({
+								command: "receiveMessage",
+								text: `Error: ${error}`,
+								sender: "assistant",
+								chatType: message.chatType || 'quick',
+							});
 						}
 						break;
 					// Fetches and updates available models list
-					case 'refreshModels':
+					case "refreshModels":
 						try {
-							console.log('Fetching available models...');
-							const models = await service.getAvailableModels();
+						console.log("Fetching available models...");
+						const models = await service.getAvailableModels();
 
-							// Send models back to webview
-							panel.webview.postMessage({
-									command: 'updateModels',
-									models: models
-							});
+						// Send models back to webview
+						panel.webview.postMessage({
+							command: "updateModels",
+							models: models,
+						});
 						} catch (error) {
-							console.error('Error fetching models:', error);
-							panel.webview.postMessage({
-									command: 'updateModels',
-									models: [], // Empty array on error
-									error: 'Failed to load models'
-							});
+						console.error("Error fetching models:", error);
+						panel.webview.postMessage({
+							command: "updateModels",
+							models: [], // Empty array on error
+							error: "Failed to load models",
+						});
 						}
+						break;
+					
+					// Clears all saved chat
+					case "clearSavedChat":
+						// This will clear the conversation memory for saved chat
+						console.log("Clearing saved chat memory...");
+						// TBD
 						break;
 				}
 			},
@@ -153,11 +164,11 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 	return `<!DOCTYPE html>
 	<html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ollama Chat</title>
-        <script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
-        <link rel="stylesheet" href="${cssUri}">
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Ollama Chat</title>
+			<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
+			<link rel="stylesheet" href="${cssUri}">
     </head>
     <body>
         <div class="chat-container">
