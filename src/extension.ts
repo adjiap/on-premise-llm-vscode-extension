@@ -33,116 +33,171 @@ export function activate(context: vscode.ExtensionContext) {
 	 * Handles configuration validation, service initialization, and webview setup.
 	 */
 	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-chat.openChat', async () => {
-		// Ensure valid configuration exists, prompt user if needed
-		const config = await ConfigManager.ensureConfig();
-		if (!config) {
-			vscode.window.showErrorMessage('OpenWebUI Chat configuration cancelled.');
-			return;
-		}
+    // Ensure valid configuration exists, prompt user if needed
+    const config = await ConfigManager.ensureConfig();
+    if (!config) {
+      vscode.window.showErrorMessage("OpenWebUI Chat configuration cancelled.");
+      return;
+    }
 
-		// Initialize OpenWebUI service with validated configuration
-		const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
-		console.log('On-Premise LLM OpenWebUI Chat is active!');
+    // Initialize OpenWebUI service with validated configuration
+    const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
+    console.log("On-Premise LLM OpenWebUI Chat is active!");
 
-		// Create status bar for user
-		const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-		statusBarItem.text = "$(loading~spin) Opening Chat...";
-		statusBarItem.show();
-		setTimeout(() => {
-			statusBarItem.dispose();
-		}, 2000);
+    // Create status bar for user
+    const statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+      100
+    );
+    statusBarItem.text = "$(loading~spin) Opening Chat...";
+    statusBarItem.show();
+    setTimeout(() => {
+      statusBarItem.dispose();
+    }, 2000);
 
-		// Create and show webview panel
-		const panel = vscode.window.createWebviewPanel(
-			'onpremOpenwebuiChat',
-			'On-Prem OpenWebUI Chat',
-			vscode.ViewColumn.Two,
-			{
-				enableScripts: true,
-				retainContextWhenHidden: true,
-				localResourceRoots: [context.extensionUri]
-			}
-		);
+    // Create and show webview panel
+    const panel = vscode.window.createWebviewPanel(
+      "onpremOpenwebuiChat",
+      "On-Prem OpenWebUI Chat",
+      vscode.ViewColumn.Two,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        localResourceRoots: [context.extensionUri],
+      }
+    );
 
-		// Set HTML Content
-		panel.webview.html = getWebViewContent(panel.webview, context.extensionUri)
+    // Add this after creating the panel and before the message handler
+    let savedChatHistory: Array<{
+      role: "user" | "assistant";
+      content: string;
+    }> = [];
 
-		// Handling messages from webview
-		panel.webview.onDidReceiveMessage(
-			async (message: WebviewMessage) => {
-				switch (message.command) {
-					// Handles user chat message and get responses
-					case "sendMessage":
-						try {
-							// Validate message
-							if (!message.text || message.text.trim() === "") {
-								console.error("Empty message received");
-								return;
-							}
+    // Add system prompt to saved chat history if it exists
+    if (config.systemPrompt && config.systemPrompt.trim()) {
+      savedChatHistory.push({
+        role: "user",
+        content: config.systemPrompt,
+      });
+    }
 
-							console.log(
-								"Received message:", message.text,
-								"Chat type:", message.chatType
-							);
-							// Send to OpenWebUI
-							const response = await service.sendChat(
-								[{ role: "user", content: message.text }],
-								config.defaultModel,
-								config.systemPrompt
-							);
+    // Set HTML Content
+    panel.webview.html = getWebViewContent(panel.webview, context.extensionUri);
 
-							// Send response back to webview
-							panel.webview.postMessage({
-								command: "receiveMessage",
-								text: response,
-								sender: "assistant",
-								chatType: message.chatType || 'quick',
-							});
-						} catch (error) {
-							console.error("Chat error:", error);
-							panel.webview.postMessage({
-								command: "receiveMessage",
-								text: `Error: ${error}`,
-								sender: "assistant",
-								chatType: message.chatType || 'quick',
-							});
-						}
-						break;
-					
-					// Fetches and updates available models list
-					case "refreshModels":
-						try {
-							console.log("Fetching available models...");
-							const models = await service.getAvailableModels();
-							console.log("Found models:", models);
+    // Handling messages from webview
+    panel.webview.onDidReceiveMessage(
+      async (message: WebviewMessage) => {
+        switch (message.command) {
+          // Handles user chat message and get responses
+          case "sendMessage":
+            try {
+              console.log("=== SENDMESSAGE DEBUG ===");
+              console.log(
+                "Full message object:",
+                JSON.stringify(message, null, 2)
+              );
+              console.log("Message chatType:", message.chatType);
+              console.log("Message text:", message.text);
 
-							// Send models back to webview
-							panel.webview.postMessage({
-								command: "updateModels",
-								models: models,
-							});
-							} catch (error) {
-							console.error("Error fetching models:", error);
-							panel.webview.postMessage({
-								command: "updateModels",
-								models: [], // Empty array on error
-								error: "Failed to load models",
-							});
-						}
-						break;
-					
-					// Clears all saved chat
-					case "clearSavedChat":
-						// This will clear the conversation memory for saved chat
-						console.log("Clearing saved chat memory...");
-						// TBD
-						break;
-				}
-			},
-			undefined,
-			context.subscriptions
-		);
-	});
+              // Validate message
+              if (!message.text || message.text.trim() === "") {
+                console.error("Empty message received");
+                return;
+              }
+
+              console.log(
+                "Received message:", message.text,
+                "Chat type:", message.chatType
+              );
+
+							let response: string;
+
+							if (message.chatType === "saved") {
+                // SAVED CHAT: Use conversation history
+                savedChatHistory.push({ role: "user", content: message.text });
+
+                response = await service.sendChat(
+                  savedChatHistory, // Send full conversation history
+                  config.defaultModel,
+                  "" // Don't pass systemPrompt separately since it's in history
+                );
+
+                // Add AI response to history
+                savedChatHistory.push({ role: "assistant", content: response });
+              } else {
+                // QUICK CHAT: Single message (no memory)
+                response = await service.sendChat(
+                  [{ role: "user", content: message.text }],
+                  config.defaultModel,
+                  config.systemPrompt
+                );
+              }
+
+              // Send response back to webview
+              console.log(
+                "Sending response with chatType:",
+                message.chatType || "quick"
+              );
+
+              panel.webview.postMessage({
+                command: "receiveMessage",
+                text: response,
+                sender: "assistant",
+                chatType: message.chatType || "quick",
+              });
+            } catch (error) {
+              console.error("Chat error:", error);
+              panel.webview.postMessage({
+                command: "receiveMessage",
+                text: `Error: ${error}`,
+                sender: "assistant",
+                chatType: message.chatType || "quick",
+              });
+            }
+            break;
+
+          // Fetches and updates available models list
+          case "refreshModels":
+            try {
+              console.log("Fetching available models...");
+              const models = await service.getAvailableModels();
+              console.log("Found models:", models);
+
+              // Send models back to webview
+              panel.webview.postMessage({
+                command: "updateModels",
+                models: models,
+              });
+            } catch (error) {
+              console.error("Error fetching models:", error);
+              panel.webview.postMessage({
+                command: "updateModels",
+                models: [], // Empty array on error
+                error: "Failed to load models",
+              });
+            }
+            break;
+
+          // Clears all saved chat
+          case "clearSavedChat":
+            // This will clear the conversation memory for saved chat
+            console.log("Clearing saved chat memory...");
+            savedChatHistory = [];
+
+            // Re-add system prompt if it exists
+            if (config.systemPrompt && config.systemPrompt.trim()) {
+              savedChatHistory.push({
+                role: "user",
+                content: config.systemPrompt,
+              });
+            }
+            break;
+        }
+      },
+      undefined,
+      context.subscriptions
+    );
+  });
 
 	context.subscriptions.push(disposable);
 }
