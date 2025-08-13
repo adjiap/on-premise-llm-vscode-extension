@@ -42,7 +42,14 @@ export function activate(context: vscode.ExtensionContext) {
 		// Initialize OpenWebUI service with validated configuration
 		const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
 		console.log('On-Premise LLM OpenWebUI Chat is active!');
-		vscode.window.showInformationMessage('Opening On-Prem Chat...');
+
+		// Create status bar for user
+		const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+		statusBarItem.text = "$(loading~spin) Opening Chat...";
+		statusBarItem.show();
+		setTimeout(() => {
+			statusBarItem.dispose();
+		}, 2000);
 
 		// Create and show webview panel
 		const panel = vscode.window.createWebviewPanel(
