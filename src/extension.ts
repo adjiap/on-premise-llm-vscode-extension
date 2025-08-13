@@ -161,6 +161,11 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
     </head>
     <body>
         <div class="chat-container">
+			<div class="tab-container">
+				<div class="tab active" onclick="switchTab('quick')">Quick-Chat</div>
+				<div class="tab" onclick="switchTab('saved')">Saved-Chat</div>
+			</div>
+
             <div class="model-selection">
                 <label for="modelSelect">Model:</label>
                 <vscode-dropdown id="modelSelect">
@@ -169,13 +174,23 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
                 <vscode-button appearance="secondary" onclick="refreshModels()">🔄</vscode-button>
             </div>
 
-            <div class="messages" id="messages"></div>
+            <div id="quick-tab" class="tab-content active">
+				<div class="messages" id="quick-messages"></div>
+				<div class="input-container">
+					<input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
+					<button onclick="sendMessage('quick')">Send</button>
+					<vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
+				</div>
+			</div>
 
-            <div class="input-container">
-                <input type="text" id="messageInput" placeholder="Type your message...">
-                <button onclick="sendMessage()">Send</button>
-                <vscode-button appearance="secondary" onclick="clearMessages()">Clear</vscode-button>
-            </div>
+			<div id="saved-tab" class="tab-content">
+				<div class="messages" id="saved-messages"></div>
+				<div class="input-container">
+					<input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
+					<button onclick="sendMessage('saved')">Send</button>
+					<vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
+				</div>
+			</div>
         </div>
         
         <script src="${jsUri}"></script>
