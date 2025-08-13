@@ -33,6 +33,20 @@ body {
   margin-bottom: 15px;
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
 /* Scrollable messages area */
 .messages {
   flex: 1;

@@ -108,24 +108,26 @@ export function activate(context: vscode.ExtensionContext) {
 							});
 						}
 						break;
+					
 					// Fetches and updates available models list
 					case "refreshModels":
 						try {
-						console.log("Fetching available models...");
-						const models = await service.getAvailableModels();
+							console.log("Fetching available models...");
+							const models = await service.getAvailableModels();
+							console.log("Found models:", models);
 
-						// Send models back to webview
-						panel.webview.postMessage({
-							command: "updateModels",
-							models: models,
-						});
-						} catch (error) {
-						console.error("Error fetching models:", error);
-						panel.webview.postMessage({
-							command: "updateModels",
-							models: [], // Empty array on error
-							error: "Failed to load models",
-						});
+							// Send models back to webview
+							panel.webview.postMessage({
+								command: "updateModels",
+								models: models,
+							});
+							} catch (error) {
+							console.error("Error fetching models:", error);
+							panel.webview.postMessage({
+								command: "updateModels",
+								models: [], // Empty array on error
+								error: "Failed to load models",
+							});
 						}
 						break;
 					
@@ -168,6 +170,7 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>Ollama Chat</title>
 			<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
+			<link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
 			<link rel="stylesheet" href="${cssUri}">
     </head>
     <body>
@@ -175,11 +178,11 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 			<div class="tab-container">
 				<div class="tab active" onclick="switchTab('quick')">
 					Quick-Chat
-					<span class="tooltip-icon" title="Single prompts without conversation memory. Each message is independent from another.">$(question)</span>
+					<span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
 				</div>
 				<div class="tab" onclick="switchTab('saved')">
 					Saved-Chat
-					<span class="tooltip-icon" title="Continuous conversation with memory. The AI remembers previous messages in the chat.">$(question)</span>
+					<span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
 				</div>
 			</div>
 
@@ -188,7 +191,9 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
                 <vscode-dropdown id="modelSelect">
                     <vscode-option value="">Loading models...</vscode-option>
                 </vscode-dropdown>
-                <vscode-button appearance="secondary" onclick="refreshModels()">$(repo-sync)</vscode-button>
+                <vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
+									<span class="codicon codicon-repo-sync" id="refreshIcon"></span>
+								</vscode-button>
             </div>
 
             <div id="quick-tab" class="tab-content active">

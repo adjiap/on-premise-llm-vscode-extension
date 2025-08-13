@@ -46,6 +46,17 @@ function switchTab(tabName) {
  * Sends 'refreshModels' command to extension host.
  */
 function refreshModels() {
+  console.log("refreshModels function called");
+  const button = document.getElementById("refreshButton");
+  const icon = document.getElementById("refreshIcon");
+
+  console.log("Starting refresh models...");
+
+  // Add spinning animation
+  icon.classList.add("spinning");
+  button.disabled = true;
+
+  console.log("Sending refreshModels message to extension...");
   vscode.postMessage({
     command: "refreshModels",
   });
@@ -157,7 +168,21 @@ window.addEventListener("message", (event) => {
   }
 
   if (message.command === "updateModels") {
+    console.log("Received updateModels, stopping spinner...");
     updateModelDropdown(message.models, message.error);
+
+    // Stops spinning animation
+    const icon = document.getElementById("refreshIcon");
+    const button = document.getElementById("refreshButton");
+
+    console.log("Icon found:", !!icon, "Button found:", !!button);
+    if (icon) {
+      icon.classList.remove("spinning");
+      console.log("Removed spinning class");
+    }
+    if (button) {
+      button.disabled = false;
+    }
   }
 });
 
