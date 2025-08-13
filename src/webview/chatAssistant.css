@@ -10,72 +10,150 @@
 
 /* Base layout and theme integration */
 body {
-    font-family: var(--vscode-font-family);
-    color: var(--vscode-foreground);
-    background-color: var(--vscode-editor-background);
-    margin: 0;
-    padding: 20px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-background);
+  margin: 0;
+  padding: 20px;
 }
 
 /* Main container layout */
 .chat-container {
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    max-width: 800px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
 }
 
 /* Model selection dropdown area */
 .model-selection {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
 }
 
 /* Scrollable messages area */
 .messages {
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid var(--vscode-panel-border);
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--vscode-panel-border);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
 }
 
 /* Individual message styling */
 .message {
-    margin-bottom: 12px;
-    padding: 8px;
-    border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 4px;
 }
 
 /* User message appearance */
 .message.user {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    margin-left: 20%;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  margin-left: 20%;
 }
 
 /* Assistant message appearance */
 .message.assistant {
-    background-color: var(--vscode-input-background);
-    border: 1px solid var(--vscode-input-border);
-    margin-right: 20%;
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  margin-right: 20%;
 }
 
 /* Input controls container */
 .input-container {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 10px;
 }
 
 /* Message input field */
 #messageInput {
-    flex: 1;
-    padding: 10px;
-    background: var(--vscode-input-background);
-    border: 1px solid var(--vscode-input-border);
-    color: var(--vscode-input-foreground);
-    border-radius: 4px;
+  flex: 1;
+  padding: 10px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  color: var(--vscode-input-foreground);
+  border-radius: 4px;
+}
+
+/* Tab navigation styles */
+.tab-container {
+  display: flex;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  margin-bottom: 15px;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  color: var(--vscode-foreground);
+  background: transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* This spreads the text and icon */
+}
+
+.tab:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.tab.active {
+  border-bottom-color: var(--vscode-button-background);
+  background-color: var(--vscode-tab-activeBackground);
+  font-weight: bold;
+}
+
+/* Tab content styles */
+.tab-content {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  height: calc(90vh - 120px);
+}
+
+.tab-content.active {
+  display: flex;
+}
+
+/* Update messages to work within tab content */
+.tab-content .messages {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--vscode-panel-border);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+/* Tool tip for descriptions */
+.tooltip-icon {
+  margin-left: 8px;
+  opacity: 0.6;
+  cursor: help;
+  font-size: 14px;
+}
+
+.tooltip-icon:hover {
+  opacity: 1;
 }

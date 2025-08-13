@@ -11,8 +11,9 @@ import { OpenWebUIService } from './openwebuiService';
 interface WebviewMessage {
     command: string;
     text?: string;
-    models?: string[];
+    models?: string[];  // Only for populating dropdown of models available
     error?: string;
+		chatType?: string;
 }
 
 /**
@@ -61,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 				retainContextWhenHidden: true,
 				localResourceRoots: [context.extensionUri]
 			}
-		)
+		);
 
 		// Set HTML Content
 		panel.webview.html = getWebViewContent(panel.webview, context.extensionUri)
@@ -71,58 +72,70 @@ export function activate(context: vscode.ExtensionContext) {
 			async (message: WebviewMessage) => {
 				switch (message.command) {
 					// Handles user chat message and get responses
-					case 'sendMessage':
+					case "sendMessage":
 						try {
 							// Validate message
-							if (!message.text || message.text.trim() === '') {
-								console.error('Empty message received');
+							if (!message.text || message.text.trim() === "") {
+								console.error("Empty message received");
 								return;
 							}
 
-							console.log('Received message:', message.text);
+							console.log(
+								"Received message:", message.text,
+								"Chat type:", message.chatType
+							);
 							// Send to OpenWebUI
 							const response = await service.sendChat(
-								[
-									{ role: 'user', content: message.text }
-								],
+								[{ role: "user", content: message.text }],
 								config.defaultModel,
 								config.systemPrompt
 							);
-							
+
 							// Send response back to webview
 							panel.webview.postMessage({
-									command: 'receiveMessage',
-									text: response,
-									sender: 'assistant'
+								command: "receiveMessage",
+								text: response,
+								sender: "assistant",
+								chatType: message.chatType || 'quick',
 							});
 						} catch (error) {
-								console.error('Chat error:', error);
-								panel.webview.postMessage({
-										command: 'receiveMessage',
-										text: `Error: ${error}`,
-										sender: 'assistant'
-								});
+							console.error("Chat error:", error);
+							panel.webview.postMessage({
+								command: "receiveMessage",
+								text: `Error: ${error}`,
+								sender: "assistant",
+								chatType: message.chatType || 'quick',
+							});
 						}
 						break;
+					
 					// Fetches and updates available models list
-					case 'refreshModels':
+					case "refreshModels":
 						try {
-							console.log('Fetching available models...');
+							console.log("Fetching available models...");
 							const models = await service.getAvailableModels();
+							console.log("Found models:", models);
 
 							// Send models back to webview
 							panel.webview.postMessage({
-									command: 'updateModels',
-									models: models
+								command: "updateModels",
+								models: models,
 							});
-						} catch (error) {
-							console.error('Error fetching models:', error);
+							} catch (error) {
+							console.error("Error fetching models:", error);
 							panel.webview.postMessage({
-									command: 'updateModels',
-									models: [], // Empty array on error
-									error: 'Failed to load models'
+								command: "updateModels",
+								models: [], // Empty array on error
+								error: "Failed to load models",
 							});
 						}
+						break;
+					
+					// Clears all saved chat
+					case "clearSavedChat":
+						// This will clear the conversation memory for saved chat
+						console.log("Clearing saved chat memory...");
+						// TBD
 						break;
 				}
 			},
@@ -153,29 +166,53 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 	return `<!DOCTYPE html>
 	<html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ollama Chat</title>
-        <script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
-        <link rel="stylesheet" href="${cssUri}">
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Ollama Chat</title>
+			<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
+			<link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
+			<link rel="stylesheet" href="${cssUri}">
     </head>
     <body>
         <div class="chat-container">
+			<div class="tab-container">
+				<div class="tab active" onclick="switchTab('quick')">
+					Quick-Chat
+					<span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
+				</div>
+				<div class="tab" onclick="switchTab('saved')">
+					Saved-Chat
+					<span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
+				</div>
+			</div>
+
             <div class="model-selection">
                 <label for="modelSelect">Model:</label>
                 <vscode-dropdown id="modelSelect">
                     <vscode-option value="">Loading models...</vscode-option>
                 </vscode-dropdown>
-                <vscode-button appearance="secondary" onclick="refreshModels()">🔄</vscode-button>
+                <vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
+									<span class="codicon codicon-repo-sync" id="refreshIcon"></span>
+								</vscode-button>
             </div>
 
-            <div class="messages" id="messages"></div>
+            <div id="quick-tab" class="tab-content active">
+				<div class="messages" id="quick-messages"></div>
+				<div class="input-container">
+					<input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
+					<button onclick="sendMessage('quick')">Send</button>
+					<vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
+				</div>
+			</div>
 
-            <div class="input-container">
-                <input type="text" id="messageInput" placeholder="Type your message...">
-                <button onclick="sendMessage()">Send</button>
-                <vscode-button appearance="secondary" onclick="clearMessages()">Clear</vscode-button>
-            </div>
+			<div id="saved-tab" class="tab-content">
+				<div class="messages" id="saved-messages"></div>
+				<div class="input-container">
+					<input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
+					<button onclick="sendMessage('saved')">Send</button>
+					<vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
+				</div>
+			</div>
         </div>
         
         <script src="${jsUri}"></script>
