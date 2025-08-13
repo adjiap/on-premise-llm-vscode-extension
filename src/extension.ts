@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 import { ConfigManager } from './configManager';
 import { OpenWebUIService } from './openwebuiService';
 
+/**
+ * Message interface for communication between webview and extension.
+ * Used for type-safe message passing in both directions.
+ */
 interface WebviewMessage {
     command: string;
     text?: string;
@@ -11,30 +15,33 @@ interface WebviewMessage {
     error?: string;
 }
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+/**
+ * Called when the extension is activated.
+ * Registers commands and sets up the extension's functionality.
+ * 
+ * @param context - The extension context provided by VSCode
+ */
 export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('On-Premise LLM OpenWebUI Chat activated!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
+	/**
+	 * Registers the main chat command that opens the chat interface.
+	 * Handles configuration validation, service initialization, and webview setup.
+	 */
 	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-chat.openChat', async () => {
-		// The code you place here will be executed every time your command is executed
+		// Ensure valid configuration exists, prompt user if needed
 		const config = await ConfigManager.ensureConfig();
 		if (!config) {
 			vscode.window.showErrorMessage('OpenWebUI Chat coniguration cancelled.');
 			return;
 		}
 
+		// Initialize OpenWebUI service with validated configuration
 		const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
-
 		console.log('On-Premise LLM OpenWebUI Chat is active!')
-
-		// Display a message box to the user
 		vscode.window.showInformationMessage('Opening On-Prem Chat...');
 
 		// Create and show webview panel
@@ -56,6 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.onDidReceiveMessage(
 			async (message: WebviewMessage) => {
 				switch (message.command) {
+					// Handles user chat message and get responses
 					case 'sendMessage':
 						try {
 							// Validate message
@@ -89,6 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
 								});
 						}
 						break;
+					// Fetches and updates available models list
 					case 'refreshModels':
 						try {
 							console.log('Fetching available models...');
@@ -118,6 +127,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 
+/**
+ * Generates the HTML content for the chat webview.
+ * Creates a complete chat interface with VSCode theming and UI toolkit integration.
+ * 
+ * @param webview - The webview instance for resource URI generation
+ * @param extensionUri - The extension's base URI for resource loading
+ * @returns Complete HTML string for the chat interface
+ */
 function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
 	return `<!DOCTYPE html>
 	<html lang="en">
@@ -298,5 +315,8 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 	</html>`;
 }
 
-// This method is called when your extension is deactivated
+/**
+ * Called when the extension is deactivated.
+ * Performs cleanup operations before extension shutdown.
+ */
 export function deactivate() {}

@@ -2,17 +2,26 @@ import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
 
+/**
+ * Represents a chat message in the conversation.
+ */
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
+/**
+ * Represents an API request in the conversation.
+ */
 interface ChatRequest {
   model: string;
   messages: ChatMessage[];
   stream?: boolean;
 }
 
+/**
+ * Represents a chat answer from assistant in the conversation.
+ */
 interface ChatResponse {
   message: {
     role: string;
@@ -21,10 +30,20 @@ interface ChatResponse {
   done: boolean;
 }
 
+/**
+ * Service class for interacting with OpenWebUI API.
+ * Handles authentication, chat requests, and model management.
+ */
 export class OpenWebUIService {
   private baseUrl: string;
   private apiKey: string;
 
+  /**
+   * Creates a new OpenWebUIService instance.
+   * @param baseUrl - The base URL of the OpenWebUI service
+   * @param apiKey - The API key for authentication
+   * @throws {Error} When baseUrl or apiKey are missing
+   */
   constructor(baseUrl: string, apiKey: string) {
     if (!baseUrl) {
       throw new Error('OpenWebUI base URL is required');
@@ -37,6 +56,14 @@ export class OpenWebUIService {
     this.apiKey = apiKey;
   }
 
+  /**
+   * Makes an HTTP request to the OpenWebUI API.
+   * @param endpoint - The API endpoint path
+   * @param method - HTTP method (defaults to 'GET')
+   * @param data - Request body data for POST requests
+   * @returns Promise resolving to the parsed JSON response
+   * @private
+   */
   private async makeRequest(endpoint: string, method: string = 'GET', data?: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const url = new URL(`${this.baseUrl}${endpoint}`);
@@ -83,6 +110,14 @@ export class OpenWebUIService {
     });
   }
 
+  /**
+   * Sends a chat message to the LLM and returns the response.
+   * @param messages - Array of chat messages in the conversation
+   * @param model - The model name to use for generation
+   * @param systemPrompt - Optional system prompt to prepend to conversation
+   * @returns Promise resolving to the assistant's response text
+   * @throws {Error} When model is missing or API request fails
+   */
   async sendChat(messages: ChatMessage[], model: string, systemPrompt?: string): Promise<string> {
     if (!model) {
       throw new Error('Model name is required')
