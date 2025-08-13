@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 		// Ensure valid configuration exists, prompt user if needed
 		const config = await ConfigManager.ensureConfig();
 		if (!config) {
-			vscode.window.showErrorMessage('OpenWebUI Chat coniguration cancelled.');
+			vscode.window.showErrorMessage('OpenWebUI Chat configuration cancelled.');
 			return;
 		}
 
@@ -136,189 +136,44 @@ export function activate(context: vscode.ExtensionContext) {
  * @returns Complete HTML string for the chat interface
  */
 function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+	const getWebViewUri = (filename: string) =>
+		webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'src', 'webview', filename));
+
+	// Instantiate URI for WebView elements
+	const cssUri = getWebViewUri("chatAssistant.css");
+	const jsUri = getWebViewUri("chatAssistant.js");
+
 	return `<!DOCTYPE html>
 	<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Ollama Chat</title>
-		<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
-		<style>
-			body { 
-				font-family: var(--vscode-font-family);
-				color: var(--vscode-foreground);
-				background-color: var(--vscode-editor-background);
-				margin: 0;
-				padding: 20px;
-			}
-			.chat-container {
-				height: 90vh;
-				display: flex;
-				flex-direction: column;
-				max-width: 800px;
-			}
-			.model-selection {
-				display: flex;
-				align-items: center;
-				gap: 10px;
-				margin-bottom: 15px;
-			}
-			.messages {
-				flex: 1;
-				overflow-y: auto;
-				border: 1px solid var(--vscode-panel-border);
-				padding: 15px;
-				margin-bottom: 15px;
-				border-radius: 4px;
-			}
-			.message {
-				margin-bottom: 12px;
-				padding: 8px;
-				border-radius: 4px;
-			}
-			.message.user {
-				background-color: var(--vscode-button-background);
-				color: var(--vscode-button-foreground);
-				margin-left: 20%;
-			}
-			.message.assistant {
-				background-color: var(--vscode-input-background);
-				border: 1px solid var(--vscode-input-border);
-				margin-right: 20%;
-			}
-			.input-container {
-				display: flex;
-				gap: 10px;
-			}
-			#messageInput {
-				flex: 1;
-				padding: 10px;
-				background: var(--vscode-input-background);
-				border: 1px solid var(--vscode-input-border);
-				color: var(--vscode-input-foreground);
-				border-radius: 4px;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="chat-container">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ollama Chat</title>
+        <script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
+        <link rel="stylesheet" href="${cssUri}">
+    </head>
+    <body>
+        <div class="chat-container">
+            <div class="model-selection">
+                <label for="modelSelect">Model:</label>
+                <vscode-dropdown id="modelSelect">
+                    <vscode-option value="">Loading models...</vscode-option>
+                </vscode-dropdown>
+                <vscode-button appearance="secondary" onclick="refreshModels()">🔄</vscode-button>
+            </div>
 
-			<div class="model-selection">
-				<label for="modelSelect">Model:</label>
-				<vscode-dropdown id="modelSelect">
-					<vscode-option value="">Loading models...</vscode-option>
-				</vscode-dropdown>
-				<vscode-button appearance="secondary" onclick="refreshModels()">🔄</vscode-button>
-			</div>
+            <div class="messages" id="messages"></div>
 
-			<div class="messages" id="messages">
-				<div class="message assistant">Welcome to Ollama Chat! Type a message below to get started.</div>
-			</div>
-
-			<div class="input-container">
-				<input type="text" id="messageInput" placeholder="Type your message...">
-				<button onclick="sendMessage()">Send</button>
-				<vscode-button appearance="secondary" onclick="clearMessages()">Clear</vscode-button>
-			</div>
-		</div>
-		
-		<script>
-			const vscode = acquireVsCodeApi();
-
-			function refreshModels() {
-				vscode.postMessage({
-					command: 'refreshModels'
-				});
-			}
-
-			function sendMessage() {
-				const input = document.getElementById('messageInput');
-				const text = input.value.trim();
-				
-				if (text) {
-					// Display user message
-					addMessage(text, 'user');
-					
-					// Send to extension
-					vscode.postMessage({
-						command: 'sendMessage',
-						text: text
-					});
-					
-					input.value = '';
-				}
-			}
-			
-			function addMessage(text, sender) {
-				const messages = document.getElementById('messages');
-				const messageDiv = document.createElement('div');
-				messageDiv.className = 'message ' + sender;
-				messageDiv.textContent = text;
-				messages.appendChild(messageDiv);
-				messages.scrollTop = messages.scrollHeight;
-			}
-			
-			function updateModelDropdown(models, error) {
-				const dropdown = document.getElementById('modelSelect');
-				dropdown.innerHTML = ''; // Clear existing options
-	
-				if (error) {
-					const option = document.createElement('vscode-option');
-					option.value = '';
-					option.textContent = 'Error loading models';
-					dropdown.appendChild(option);
-					return;
-				}
-
-				if (models.length === 0) {
-					const option = document.createElement('vscode-option');
-					option.value = '';
-					option.textContent = 'No models found';
-					dropdown.appendChild(option);
-					return;
-				}
-
-				// Add each model as an option
-				models.forEach(model => {
-					const option = document.createElement('vscode-option');
-					option.value = model;
-					option.textContent = model;
-					dropdown.appendChild(option);
-				});
-			}
-
-			function clearMessages() {
-				const messages = document.getElementById('messages');
-				messages.innerHTML = '';
-			}
-
-			// Listen for messages from extension
-			window.addEventListener('message', event => {
-				const message = event.data;
-
-				if (message.command === 'receiveMessage') {
-					addMessage(message.text, message.sender);
-				}
-
-				if (message.command === 'updateModels') {
-        	updateModelDropdown(message.models, message.error);
-    		}
-			});
-
-			// Automatically fetch models on startup
-			window.addEventListener('load', () => {
-				refreshModels();
-			});
-
-			// Handle Enter key
-			document.getElementById('messageInput').addEventListener('keypress', function(e) {
-				if (e.key === 'Enter') {
-					sendMessage();
-				}
-			});
-		</script>
-	</body>
-	</html>`;
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button onclick="sendMessage()">Send</button>
+                <vscode-button appearance="secondary" onclick="clearMessages()">Clear</vscode-button>
+            </div>
+        </div>
+        
+        <script src="${jsUri}"></script>
+    </body>
+    </html>`;
 }
 
 /**

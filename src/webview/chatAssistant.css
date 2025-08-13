@@ -1,0 +1,62 @@
+body {
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-foreground);
+    background-color: var(--vscode-editor-background);
+    margin: 0;
+    padding: 20px;
+}
+
+.chat-container {
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+}
+
+.model-selection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--vscode-panel-border);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.message {
+    margin-bottom: 12px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.message.user {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    margin-left: 20%;
+}
+
+.message.assistant {
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    margin-right: 20%;
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+}
+
+#messageInput {
+    flex: 1;
+    padding: 10px;
+    background: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    color: var(--vscode-input-foreground);
+    border-radius: 4px;
+}
