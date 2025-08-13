@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// Initialize OpenWebUI service with validated configuration
 		const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
-		console.log('On-Premise LLM OpenWebUI Chat is active!')
+		console.log('On-Premise LLM OpenWebUI Chat is active!');
 		vscode.window.showInformationMessage('Opening On-Prem Chat...');
 
 		// Create and show webview panel
@@ -218,6 +218,7 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 			<div class="input-container">
 				<input type="text" id="messageInput" placeholder="Type your message...">
 				<button onclick="sendMessage()">Send</button>
+				<vscode-button appearance="secondary" onclick="clearMessages()">Clear</vscode-button>
 			</div>
 		</div>
 		
@@ -284,8 +285,13 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 					option.textContent = model;
 					dropdown.appendChild(option);
 				});
-		}
-			
+			}
+
+			function clearMessages() {
+				const messages = document.getElementById('messages');
+				messages.innerHTML = '';
+			}
+
 			// Listen for messages from extension
 			window.addEventListener('message', event => {
 				const message = event.data;
