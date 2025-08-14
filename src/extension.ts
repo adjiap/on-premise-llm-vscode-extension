@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { ConfigManager } from './utils/configManager';
-import { OpenWebUIService } from './openwebuiService';
+import { OpenWebUIService } from './utils/openwebuiService';
 import {
   PersistenceManager,
   ConversationMessage,
