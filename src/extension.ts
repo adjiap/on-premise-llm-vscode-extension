@@ -330,11 +330,17 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
   // Read and process HTML template
   const htmlContent = require("fs").readFileSync(htmlUri.fsPath, "utf8");
 
+  // Choose Icon for modes
+  const chatModeIcon = chatMode === "quick" ? "codicon-robot" : "codicon-notebook";
+  const chatModeTitle = chatMode === "quick" ? "Quick Chat" : "Saved Chat";
+
   // Replace placeholders with actual URIs
   return htmlContent
     .replace("{{cssUri}}", cssUri.toString())
     .replace("{{jsUri}}", jsUri.toString())
-    .replace("{{chatMode}}", chatMode);
+    .replace("{{chatMode}}", chatMode)
+    .replace("{{chatModeIcon}}", chatModeIcon)
+    .replace("{{chatModeTitle}}", chatModeTitle);
 }
 
 /**

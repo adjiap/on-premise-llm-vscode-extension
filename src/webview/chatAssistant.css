@@ -190,3 +190,26 @@ vscode-button .codicon {
 .tooltip-icon:hover {
   opacity: 1;
 }
+
+/* Anything about chat mode title */
+.chat-mode-header {
+  display: flex;
+  flex-direction: column; /* Stack vertically instead of horizontally */
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.chat-mode-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  margin-right: 0;
+  color: var(--vscode-foreground);
+}
+
+.chat-mode-header h2 {
+  margin: 0;
+  color: var(--vscode-foreground);
+}
