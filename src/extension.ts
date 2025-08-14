@@ -28,10 +28,9 @@ interface WebviewMessage {
  * @param context - The extension context provided by VSCode
  */
 export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('On-Premise LLM OpenWebUI Assistant activated!');
+  // Use the console to output diagnostic information (console.log) and errors (console.error)
+  // This line of code will only be executed once when your extension is activated
+  console.log("On-Premise LLM OpenWebUI Assistant activated!");
 
   const quickChatDisposable = vscode.commands.registerCommand(
     "on-premise-llm-openwebui-assistant.openQuickChat",
@@ -49,7 +48,18 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(quickChatDisposable, savedChatDisposable);
 
-  async function openChatWindow(chatMode: 'quick' | 'saved', context: vscode.ExtensionContext){
+  /**
+   * Opens a chat window in the specified mode (Quick or Saved Chat).
+   * Handles configuration validation, service initialization, webview creation,
+   * and message handling for the chat interface.
+   *
+   * @param chatMode - Either 'quick' for stateless chat or 'saved' for persistent conversation
+   * @param context - VSCode extension context for accessing global state and resources
+   */
+  async function openChatWindow(
+    chatMode: "quick" | "saved",
+    context: vscode.ExtensionContext
+  ) {
     // Ensure valid configuration exists, prompt user if needed
     const config = await ConfigManager.ensureConfig();
     if (!config) {
@@ -107,7 +117,11 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // Set HTML Content
-    panel.webview.html = getWebViewContent(panel.webview, context.extensionUri, chatMode);
+    panel.webview.html = getWebViewContent(
+      panel.webview,
+      context.extensionUri,
+      chatMode
+    );
 
     // Handling messages from webview
     panel.webview.onDidReceiveMessage(
@@ -131,8 +145,10 @@ export function activate(context: vscode.ExtensionContext) {
               }
 
               console.log(
-                "Received message:", message.text,
-                "Chat type:", message.chatType
+                "Received message:",
+                message.text,
+                "Chat type:",
+                message.chatType
               );
 
               let response: string;
@@ -299,7 +315,6 @@ export function activate(context: vscode.ExtensionContext) {
       context.subscriptions
     );
   }
-
 }
 
 /**

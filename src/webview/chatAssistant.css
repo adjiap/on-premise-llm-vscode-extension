@@ -132,8 +132,7 @@ vscode-button .codicon {
 .title-with-tooltip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  /* Small space between title and tooltip */
+  gap: 8px; /* Small space between title and tooltip */
 }
 
 .title-with-tooltip h2 {
@@ -195,8 +194,8 @@ vscode-button .codicon {
 }
 
 .chat-mode-icon {
-  font-size: 24px;
-  transform: scale(2);
+  font-size: 24px; /* Base size for codicon scaling */
+  transform: scale(2); /* Scale up for prominence */
   margin-bottom: 15px;
   color: var(--vscode-foreground);
 }
