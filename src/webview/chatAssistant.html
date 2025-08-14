@@ -11,9 +11,16 @@
 <body>
 	<div class="chat-container">
 		<div class="chat-mode-header">
-			<span class="codicon {{chatModeIcon}} chat-mode-icon"></span>
-			<h2>{{chatModeTitle}}</h2>
-			<span class="tooltip-icon codicon codicon-question" title="{{chatModeTooltip}}"></span>
+			<div class="icon-title-stack">
+				<span class="codicon {{chatModeIcon}} chat-mode-icon"></span>
+				<div class="title-with-tooltip">
+					<h2>{{chatModeTitle}}</h2>
+					<span class="custom-tooltip">
+						<span class="codicon codicon-question tooltip-trigger"></span>
+						<div class="tooltip-content">{{chatModeTooltip}}</div>
+					</span>
+				</div>
+			</div>
 		</div>
 
 		<div class="model-selection">

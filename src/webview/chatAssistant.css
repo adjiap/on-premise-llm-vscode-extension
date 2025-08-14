@@ -180,21 +180,58 @@ vscode-button .codicon {
 }
 
 /* Tool tip for descriptions */
-.tooltip-icon {
-  margin-left: 8px;
-  opacity: 0.6;
-  cursor: help;
-  font-size: 14px;
+.title-with-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Small space between title and tooltip */
 }
 
-.tooltip-icon:hover {
+.title-with-tooltip h2 {
+  margin: 0;
+}
+
+.custom-tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.tooltip-trigger {
+  cursor: help;
+  opacity: 0.6;
+}
+
+.tooltip-trigger:hover {
   opacity: 1;
+}
+
+.tooltip-content {
+  visibility: hidden;
+  font-size: 24px;
+  background-color: var(--vscode-editorHoverWidget-background);
+  color: var(--vscode-editorHoverWidget-foreground);
+  text-align: left;
+  border: 1px solid var(--vscode-editorHoverWidget-border);
+  border-radius: 4px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position above the icon */
+  left: 50%;
+  margin-left: -150px; /* Center it */
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal; /* Allow text wrapping */
+}
+
+.custom-tooltip:hover .tooltip-content {
+  visibility: visible;
 }
 
 /* Anything about chat mode title */
 .chat-mode-header {
   display: flex;
-  flex-direction: column; /* Stack vertically instead of horizontally */
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
@@ -202,14 +239,15 @@ vscode-button .codicon {
   border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-.chat-mode-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-  margin-right: 0;
-  color: var(--vscode-foreground);
+.icon-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.chat-mode-header h2 {
-  margin: 0;
+.chat-mode-icon {
+  font-size: 24;
+  transform: scale(2);
+  margin-bottom: 15px;
   color: var(--vscode-foreground);
 }
