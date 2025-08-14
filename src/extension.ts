@@ -218,19 +218,25 @@ export function activate(context: vscode.ExtensionContext) {
               const exportData =
                 persistenceManager.serializeConversation(savedChatHistory);
 
-              // Send the serialized data back to webview for download
-              panel.webview.postMessage({
-                command: "exportData",
-                jsonData: exportData,
-              });
-
-              console.log("Conversation export data sent to webview");
+              const options: vscode.SaveDialogOptions = {
+                  defaultUri: vscode.Uri.file(`chat-export-${new Date().toISOString().split('T')[0]}.json`),
+                  filters: {
+                      'JSON files': ['json'],
+                      'All files': ['*']
+                  }
+              };
+              
+              const fileUri = await vscode.window.showSaveDialog(options);
+              if (fileUri) {
+                  await vscode.workspace.fs.writeFile(fileUri, Buffer.from(exportData, 'utf8'));
+                  vscode.window.showInformationMessage(`Conversation exported to ${fileUri.fsPath}`);
+                  console.log("File saved to:", fileUri.fsPath);
+              } else {
+                  console.log("Export cancelled by user");
+              }
             } catch (error) {
-              console.error("Export error:", error);
-              panel.webview.postMessage({
-                command: "exportError",
-                error: `Failed to export conversation: ${error}`,
-              });
+                console.error("Export error:", error);
+                vscode.window.showErrorMessage(`Failed to export conversation: ${error}`);
             }
             break;
 
