@@ -211,6 +211,63 @@ export function activate(context: vscode.ExtensionContext) {
             // Clear saved state
             persistenceManager.saveConversationHistory(savedChatHistory);
             break;
+
+          case "exportConversation":
+            try {
+              console.log("Exporting conversation...");
+              const exportData =
+                persistenceManager.serializeConversation(savedChatHistory);
+
+              // Send the serialized data back to webview for download
+              panel.webview.postMessage({
+                command: "exportData",
+                jsonData: exportData,
+              });
+
+              console.log("Conversation export data sent to webview");
+            } catch (error) {
+              console.error("Export error:", error);
+              panel.webview.postMessage({
+                command: "exportError",
+                error: `Failed to export conversation: ${error}`,
+              });
+            }
+            break;
+
+          case "importConversation":
+            try {
+              console.log("Importing conversation...");
+
+              if (!message.jsonData) {
+                throw new Error("No data provided for import");
+              }
+
+              const importedHistory =
+                persistenceManager.deserializeConversation(message.jsonData);
+
+              // Replace current saved chat history
+              savedChatHistory = importedHistory;
+
+              persistenceManager.saveConversationHistory(savedChatHistory);
+
+              // Send success response with messages for display
+              panel.webview.postMessage({
+                command: "importSuccess",
+                messages: savedChatHistory,
+              });
+
+              console.log(
+                "Conversation imported successfully, history length:",
+                savedChatHistory.length
+              );
+            } catch (error) {
+              console.error("Import error:", error);
+              panel.webview.postMessage({
+                command: "importError",
+                error: `Failed to import conversation: ${error}`,
+              });
+            }
+            break;
         }
       },
       undefined,
