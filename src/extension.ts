@@ -248,44 +248,44 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
     </head>
     <body>
         <div class="chat-container">
-			<div class="tab-container">
-				<div class="tab active" onclick="switchTab('quick')">
-					Quick-Chat
-					<span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
-				</div>
-				<div class="tab" onclick="switchTab('saved')">
-					Saved-Chat
-					<span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
-				</div>
-			</div>
-
-            <div class="model-selection">
-                <label for="modelSelect">Model:</label>
-                <vscode-dropdown id="modelSelect">
-                    <vscode-option value="">Loading models...</vscode-option>
-                </vscode-dropdown>
-                <vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
-									<span class="codicon codicon-repo-sync" id="refreshIcon"></span>
-								</vscode-button>
+          <div class="tab-container">
+            <div class="tab active" onclick="switchTab('quick')">
+              Quick-Chat
+              <span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
             </div>
+            <div class="tab" onclick="switchTab('saved')">
+              Saved-Chat
+              <span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
+            </div>
+          </div>
 
-            <div id="quick-tab" class="tab-content active">
-				<div class="messages" id="quick-messages"></div>
-				<div class="input-container">
-					<input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
-					<button onclick="sendMessage('quick')">Send</button>
-					<vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
-				</div>
-			</div>
+          <div class="model-selection">
+              <label for="modelSelect">Model:</label>
+              <vscode-dropdown id="modelSelect">
+                  <vscode-option value="">Loading models...</vscode-option>
+              </vscode-dropdown>
+              <vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
+                <span class="codicon codicon-repo-sync" id="refreshIcon"></span>
+              </vscode-button>
+          </div>
 
-			<div id="saved-tab" class="tab-content">
-				<div class="messages" id="saved-messages"></div>
-				<div class="input-container">
-					<input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
-					<button onclick="sendMessage('saved')">Send</button>
-					<vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
-				</div>
-			</div>
+          <div id="quick-tab" class="tab-content active">
+            <div class="messages" id="quick-messages"></div>
+            <div class="input-container">
+              <input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
+              <button onclick="sendMessage('quick')">Send</button>
+              <vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
+            </div>
+          </div>
+
+          <div id="saved-tab" class="tab-content">
+            <div class="messages" id="saved-messages"></div>
+            <div class="input-container">
+              <input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
+              <button onclick="sendMessage('saved')">Send</button>
+              <vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
+            </div>
+          </div>
         </div>
         
         <script src="${jsUri}"></script>
