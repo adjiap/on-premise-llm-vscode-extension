@@ -213,34 +213,42 @@ function importConversation() {
  * Displays imported messages in the saved chat.
  * @param {Array} messages - Array of conversation messages
  */
-function displayImportedMessages(messages) {
-  const savedMessages = document.getElementById('saved-messages');
-  savedMessages.innerHTML = ''; // Clear existing messages
-  
-  messages.forEach(message => {
-    if (message.role === 'user' || message.role === 'assistant') {
-      addMessage(message.content, message.role === 'user' ? 'user' : 'assistant', 'saved');
+function displayImportedConversation(messages) {
+  const savedMessages = document.getElementById("saved-messages");
+  console.log("Clearing existing messages...");
+  savedMessages.innerHTML = ""; // Clear existing messages
+  console.log("Existing messages cleared!");
+
+  messages.forEach((message) => {
+    if (message.role === "user" || message.role === "assistant") {
+      addMessage(
+        message.content,
+        message.role === "user" ? "user" : "assistant",
+        "saved"
+      );
     }
   });
+
+  console.log("Conversation imported successfully");
 }
 
 /**
  * Triggers download of conversation export file.
  * @param {string} jsonData - JSON string of conversation data
  */
-function downloadConversationFile(jsonData) {
-  const blob = new Blob([jsonData], { type: 'application/json' });
+function downloadExportedConversation(jsonData) {
+  const blob = new Blob([jsonData], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
+
+  const a = document.createElement("a");
   a.href = url;
-  a.download = `chat-export-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `chat-export-${new Date().toISOString().split("T")[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  
+
   URL.revokeObjectURL(url);
-  console.log('Conversation exported successfully');
+  console.log("Conversation exported successfully");
 }
 
 // Event Listeners
@@ -278,12 +286,11 @@ window.addEventListener("message", (event) => {
 
   // Add new handlers for import/export
   if (message.command === "exportData") {
-    downloadConversationFile(message.jsonData);
+    downloadExportedConversation(message.jsonData);
   }
 
   if (message.command === "importSuccess") {
-    displayImportedMessages(message.messages);
-    console.log("Conversation imported successfully");
+    displayImportedConversation(message.messages);
   }
 
   if (message.command === "importError") {

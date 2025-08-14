@@ -67,7 +67,7 @@ export class PersistenceManager {
    * @param history - Conversation history to export
    * @returns JSON string of the conversation
    */
-  exportConversation(convHistory: ConversationMessage[]): string {
+  serializeConversation(convHistory: ConversationMessage[]): string {
     const exportData = {
       version: "1.0", // Arbitrary number to future-proof exported data types
       exportDate: new Date().toISOString(),
@@ -82,7 +82,7 @@ export class PersistenceManager {
    * @param jsonData - JSON string containing conversation data
    * @returns Imported conversation history
    */
-  importConversation(jsonData: string): ConversationMessage[] {
+  deserializeConversation(jsonData: string): ConversationMessage[] {
     try {
       const data = JSON.parse(jsonData);
       if (data.conversation && Array.isArray(data.conversation)) {
