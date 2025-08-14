@@ -3,17 +3,22 @@
 import * as vscode from 'vscode';
 import { ConfigManager } from './configManager';
 import { OpenWebUIService } from './openwebuiService';
+import {
+  PersistenceManager,
+  ConversationMessage,
+} from "./utils/persistenceManager";
 
 /**
  * Message interface for communication between webview and extension.
  * Used for type-safe message passing in both directions.
  */
 interface WebviewMessage {
-    command: string;
-    text?: string;
-    models?: string[];  // Only for populating dropdown of models available
-    error?: string;
-		chatType?: string;
+  command: string;
+  text?: string;
+  models?: string[]; // Only for populating dropdown of models available
+  error?: string;
+  chatType?: string;
+  jsonData?: string;
 }
 
 /**
@@ -44,6 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
     const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
     console.log("On-Premise LLM OpenWebUI Chat is active!");
 
+    // Create persistence manager
+    const persistenceManager = new PersistenceManager(context);
+
     // Create status bar for user
     const statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right,
@@ -67,18 +75,23 @@ export function activate(context: vscode.ExtensionContext) {
       }
     );
 
-    // Add this after creating the panel and before the message handler
-    let savedChatHistory: Array<{
-      role: "user" | "assistant";
-      content: string;
-    }> = [];
+    // Initialize conversation history from saved state
+    let savedChatHistory: ConversationMessage[] =
+      persistenceManager.loadConversationHistory();
 
-    // Add system prompt to saved chat history if it exists
+    // Add system prompt if not already in history and config exists
     if (config.systemPrompt && config.systemPrompt.trim()) {
-      savedChatHistory.push({
-        role: "user",
-        content: config.systemPrompt,
-      });
+      const hasSystemPrompt =
+        savedChatHistory.length > 0 &&
+        savedChatHistory[0].role === "user" &&
+        savedChatHistory[0].content === config.systemPrompt;
+
+      if (!hasSystemPrompt) {
+        savedChatHistory.unshift({
+          role: "user",
+          content: config.systemPrompt,
+        });
+      }
     }
 
     // Set HTML Content
@@ -106,14 +119,15 @@ export function activate(context: vscode.ExtensionContext) {
               }
 
               console.log(
-                "Received message:", message.text,
-                "Chat type:", message.chatType
+                "Received message:",
+                message.text,
+                "Chat type:",
+                message.chatType
               );
 
-							let response: string;
+              let response: string;
 
-							if (message.chatType === "saved") {
-                // SAVED CHAT: Use conversation history
+              if (message.chatType === "saved") {
                 savedChatHistory.push({ role: "user", content: message.text });
 
                 response = await service.sendChat(
@@ -122,8 +136,10 @@ export function activate(context: vscode.ExtensionContext) {
                   "" // Don't pass systemPrompt separately since it's in history
                 );
 
-                // Add AI response to history
                 savedChatHistory.push({ role: "assistant", content: response });
+
+                // Auto-save after each message
+                persistenceManager.saveConversationHistory(savedChatHistory);
               } else {
                 // QUICK CHAT: Single message (no memory)
                 response = await service.sendChat(
@@ -191,6 +207,72 @@ export function activate(context: vscode.ExtensionContext) {
                 content: config.systemPrompt,
               });
             }
+
+            // Clear saved state
+            persistenceManager.saveConversationHistory(savedChatHistory);
+            break;
+
+          case "exportConversation":
+            try {
+              console.log("Exporting conversation...");
+              const exportData =
+                persistenceManager.serializeConversation(savedChatHistory);
+
+              const options: vscode.SaveDialogOptions = {
+                  defaultUri: vscode.Uri.file(`chat-export-${new Date().toISOString().split('T')[0]}.json`),
+                  filters: {
+                      'JSON files': ['json'],
+                      'All files': ['*']
+                  }
+              };
+              
+              const fileUri = await vscode.window.showSaveDialog(options);
+              if (fileUri) {
+                  await vscode.workspace.fs.writeFile(fileUri, Buffer.from(exportData, 'utf8'));
+                  vscode.window.showInformationMessage(`Conversation exported to ${fileUri.fsPath}`);
+                  console.log("File saved to:", fileUri.fsPath);
+              } else {
+                  console.log("Export cancelled by user");
+              }
+            } catch (error) {
+                console.error("Export error:", error);
+                vscode.window.showErrorMessage(`Failed to export conversation: ${error}`);
+            }
+            break;
+
+          case "importConversation":
+            try {
+              console.log("Importing conversation...");
+
+              if (!message.jsonData) {
+                throw new Error("No data provided for import");
+              }
+
+              const importedHistory =
+                persistenceManager.deserializeConversation(message.jsonData);
+
+              // Replace current saved chat history
+              savedChatHistory = importedHistory;
+
+              persistenceManager.saveConversationHistory(savedChatHistory);
+
+              // Send success response with messages for display
+              panel.webview.postMessage({
+                command: "importSuccess",
+                messages: savedChatHistory,
+              });
+
+              console.log(
+                "Conversation imported successfully, history length:",
+                savedChatHistory.length
+              );
+            } catch (error) {
+              console.error("Import error:", error);
+              panel.webview.postMessage({
+                command: "importError",
+                error: `Failed to import conversation: ${error}`,
+              });
+            }
             break;
         }
       },
@@ -217,62 +299,20 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 	// Instantiate URI for WebView elements
 	const cssUri = getWebViewUri("chatAssistant.css");
 	const jsUri = getWebViewUri("chatAssistant.js");
+  const htmlUri = vscode.Uri.joinPath(
+    extensionUri,
+    "src",
+    "webview",
+    "chatAssistant.html"
+  );
 
-	return `<!DOCTYPE html>
-	<html lang="en">
-    <head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<title>Ollama Chat</title>
-			<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
-			<link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
-			<link rel="stylesheet" href="${cssUri}">
-    </head>
-    <body>
-        <div class="chat-container">
-			<div class="tab-container">
-				<div class="tab active" onclick="switchTab('quick')">
-					Quick-Chat
-					<span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
-				</div>
-				<div class="tab" onclick="switchTab('saved')">
-					Saved-Chat
-					<span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
-				</div>
-			</div>
+  // Read and process HTML template
+  const htmlContent = require("fs").readFileSync(htmlUri.fsPath, "utf8");
 
-            <div class="model-selection">
-                <label for="modelSelect">Model:</label>
-                <vscode-dropdown id="modelSelect">
-                    <vscode-option value="">Loading models...</vscode-option>
-                </vscode-dropdown>
-                <vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
-									<span class="codicon codicon-repo-sync" id="refreshIcon"></span>
-								</vscode-button>
-            </div>
-
-            <div id="quick-tab" class="tab-content active">
-				<div class="messages" id="quick-messages"></div>
-				<div class="input-container">
-					<input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
-					<button onclick="sendMessage('quick')">Send</button>
-					<vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
-				</div>
-			</div>
-
-			<div id="saved-tab" class="tab-content">
-				<div class="messages" id="saved-messages"></div>
-				<div class="input-container">
-					<input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
-					<button onclick="sendMessage('saved')">Send</button>
-					<vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
-				</div>
-			</div>
-        </div>
-        
-        <script src="${jsUri}"></script>
-    </body>
-    </html>`;
+  // Replace placeholders with actual URIs
+  return htmlContent
+    .replace("{{cssUri}}", cssUri.toString())
+    .replace("{{jsUri}}", jsUri.toString());
 }
 
 /**
