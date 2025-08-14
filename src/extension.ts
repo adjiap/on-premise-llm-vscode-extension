@@ -333,14 +333,36 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
   // Choose Icon for modes
   const chatModeIcon = chatMode === "quick" ? "codicon-robot" : "codicon-notebook";
   const chatModeTitle = chatMode === "quick" ? "Quick Chat" : "Saved Chat";
+  const chatModeTooltip =
+    chatMode === "quick"
+      ? "Single prompts without conversation memory. Each message is independent from another."
+      : "Continuous conversation with memory. The AI remembers previous messages in the chat.";
+  const chatModePlaceholder =
+    chatMode === "quick"
+      ? "Ask a quick question..."
+      : "Continue the conversation...";
+  const extraButtonsTop =
+    chatMode === "saved" ?
+      `<vscode-button appearance="secondary" onclick="importConversation()">
+        <span class="codicon codicon-folder-opened"></span> Import Chat
+      </vscode-button>` : "";
+  const extraButtonsBottom =
+    chatMode === "saved" ?
+      `<vscode-button appearance="secondary" onclick="exportConversation()">
+        <span class="codicon codicon-save"></span> Export
+      </vscode-button>` : "";
 
   // Replace placeholders with actual URIs
   return htmlContent
     .replace("{{cssUri}}", cssUri.toString())
     .replace("{{jsUri}}", jsUri.toString())
-    .replace("{{chatMode}}", chatMode)
+    .replace(/{{chatMode}}/g, chatMode)
     .replace("{{chatModeIcon}}", chatModeIcon)
-    .replace("{{chatModeTitle}}", chatModeTitle);
+    .replace("{{chatModeTitle}}", chatModeTitle)
+    .replace("{{chatModeTooltip}}", chatModeTooltip)
+    .replace("{{chatModePlaceholder}}", chatModePlaceholder)
+    .replace("{{extraButtonsTop}}", extraButtonsTop)
+    .replace("{{extraButtonsBottom}}", extraButtonsBottom);
 }
 
 /**

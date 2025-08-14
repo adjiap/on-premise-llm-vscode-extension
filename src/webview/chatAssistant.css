@@ -51,11 +51,6 @@ vscode-button .codicon {
   gap: 10px;
 }
 
-.import-controls {
-  display: flex;
-  align-items: center;
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -68,6 +63,11 @@ vscode-button .codicon {
 
 .spinning {
   animation: spin 1s linear infinite;
+}
+
+.extra-controls-top {
+  display: flex;
+  align-items: center;
 }
 
 /* Scrollable messages area */

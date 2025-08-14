@@ -10,20 +10,10 @@
 </head>
 <body>
 	<div class="chat-container">
-		<div class="tab-container">
-			<div class="tab active" onclick="switchTab('quick')">
-				Quick-Chat
-				<span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
-			</div>
-			<div class="tab" onclick="switchTab('saved')">
-				Saved-Chat
-				<span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
-			</div>
-		</div>
-
 		<div class="chat-mode-header">
 			<span class="codicon {{chatModeIcon}} chat-mode-icon"></span>
 			<h2>{{chatModeTitle}}</h2>
+			<span class="tooltip-icon codicon codicon-question" title="{{chatModeTooltip}}"></span>
 		</div>
 
 		<div class="model-selection">
@@ -37,31 +27,18 @@
 				</vscode-button>
 			</div>
 
-			<div class="import-controls" id="importControls" style="display: none;">
-				<vscode-button appearance="secondary" onclick="importConversation()">
-					<span class="codicon codicon-folder-opened"></span> Import Chat
-				</vscode-button>
+			<div class="extra-controls-top">
+				{{extraButtonsTop}}
 			</div>
 		</div>
 
-		<div id="quick-tab" class="tab-content active">
-			<div class="messages" id="quick-messages"></div>
+		<div class="single-chat-content">
+			<div class="messages" id="{{chatMode}}-messages"></div>
 			<div class="input-container">
-				<input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
-				<button onclick="sendMessage('quick')">Send</button>
-				<vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
-			</div>
-		</div>
-
-		<div id="saved-tab" class="tab-content">
-			<div class="messages" id="saved-messages"></div>
-			<div class="input-container">
-				<input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
-				<vscode-button onclick="sendMessage('saved')">Send</vscode-button>
-				<vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
-				<vscode-button appearance="secondary" onclick="exportConversation()">
-						<span class="codicon codicon-save"></span> Export
-				</vscode-button>
+				<input type="text" id="{{chatMode}}-messageInput" placeholder="{{chatModePlaceholder}}">
+				<vscode-button onclick="sendMessage('{{chatMode}}')">Send</vscode-button>
+				<vscode-button appearance="secondary" onclick="clearMessages('{{chatMode}}')">Clear</vscode-button>
+				{{extraButtonsBottom}}
 			</div>
 		</div>
 	</div>
