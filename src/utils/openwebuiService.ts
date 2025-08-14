@@ -120,7 +120,7 @@ export class OpenWebUIService {
    */
   async sendChat(messages: ChatMessage[], model: string, systemPrompt?: string): Promise<string> {
     if (!model) {
-      throw new Error('Model name is required')
+      throw new Error('Model name is required');
     }
 
     try {

@@ -7,7 +7,7 @@
  * @author adjia
  * @since 2025-08-13
  *
- * Handles tabbed interface with Quick Chat and Saved Chat modes.
+ * Handles interface with Quick Chat and Saved Chat modes.
  * - Quick-Chat: Single message/response (no memory)
  * - Saved-Chat: Conversation with memory
  * 
@@ -20,32 +20,6 @@
 
 // VSCode API reference for webview communication
 const vscode = acquireVsCodeApi();
-
-/**
- * Switches between Quick Chat and Saved Chat tabs.
- * @param {string} tabName - Either 'quick' or 'saved'
- */
-function switchTab(tabName) {
-  // Remove active class from all tabs and content
-  document
-    .querySelectorAll(".tab")
-    .forEach((tab) => tab.classList.remove("active"));
-  document
-    .querySelectorAll(".tab-content")
-    .forEach((content) => content.classList.remove("active"));
-
-  // Add active class to selected tab and content
-  const tabs = document.querySelectorAll(".tab");
-  const tabIndex = tabName === "quick" ? 0 : 1;
-  tabs[tabIndex].classList.add("active");
-  document.getElementById(`${tabName}-tab`).classList.add("active");
-
-  // Show/hide import button based on active tab
-  const importControls = document.getElementById("importControls");
-  if (importControls) {
-    importControls.style.display = tabName === "saved" ? "flex" : "none";
-  }
-}
 
 /**
  * Requests available models from the OpenWebUI service.
