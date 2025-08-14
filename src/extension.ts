@@ -236,75 +236,20 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
 	// Instantiate URI for WebView elements
 	const cssUri = getWebViewUri("chatAssistant.css");
 	const jsUri = getWebViewUri("chatAssistant.js");
+  const htmlUri = vscode.Uri.joinPath(
+    extensionUri,
+    "src",
+    "webview",
+    "chatAssistant.html"
+  );
 
-	return `<!DOCTYPE html>
-	<html lang="en">
-    <head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<title>Ollama Chat</title>
-			<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
-			<link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
-			<link rel="stylesheet" href="${cssUri}">
-    </head>
-    <body>
-        <div class="chat-container">
-          <div class="tab-container">
-            <div class="tab active" onclick="switchTab('quick')">
-              Quick-Chat
-              <span class="tooltip-icon codicon codicon-question" title="Single prompts without conversation memory. Each message is independent from another."></span>
-            </div>
-            <div class="tab" onclick="switchTab('saved')">
-              Saved-Chat
-              <span class="tooltip-icon codicon codicon-question" title="Continuous conversation with memory. The AI remembers previous messages in the chat."></span>
-            </div>
-          </div>
+  // Read and process HTML template
+  const htmlContent = require("fs").readFileSync(htmlUri.fsPath, "utf8");
 
-          <div class="model-selection">
-              <label for="modelSelect">Model:</label>
-              <vscode-dropdown id="modelSelect">
-                  <vscode-option value="">Loading models...</vscode-option>
-              </vscode-dropdown>
-              <vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
-                <span class="codicon codicon-repo-sync" id="refreshIcon"></span>
-              </vscode-button>
-          </div>
-
-          <div id="quick-tab" class="tab-content active">
-            <div class="messages" id="quick-messages"></div>
-            <div class="input-container">
-              <input type="text" id="quick-messageInput" placeholder="Ask a quick question...">
-              <button onclick="sendMessage('quick')">Send</button>
-              <vscode-button appearance="secondary" onclick="clearMessages('quick')">Clear</vscode-button>
-            </div>
-          </div>
-
-          <div id="saved-tab" class="tab-content">
-            <div class="import-export-container">
-              <vscode-button appearance="secondary" onclick="importConversation()">
-                <span class="codicon codicon-folder-opened"></span> Import Chat
-              </vscode-button>
-            </div>
-            
-            <div class="messages" id="saved-messages"></div>
-            
-            <div class="input-container">
-              <input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
-              <button onclick="sendMessage('saved')">Send</button>
-              <vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
-            </div>
-            
-            <div class="import-export-container">
-              <vscode-button appearance="secondary" onclick="exportConversation()">
-                <span class="codicon codicon-save"></span> Export Chat
-              </vscode-button>
-            </div>
-          </div>
-        </div>
-        
-        <script src="${jsUri}"></script>
-    </body>
-    </html>`;
+  // Replace placeholders with actual URIs
+  return htmlContent
+    .replace("{{cssUri}}", cssUri.toString())
+    .replace("{{jsUri}}", jsUri.toString());
 }
 
 /**
