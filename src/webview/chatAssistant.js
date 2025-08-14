@@ -237,18 +237,32 @@ function displayImportedConversation(messages) {
  * @param {string} jsonData - JSON string of conversation data
  */
 function downloadExportedConversation(jsonData) {
-  const blob = new Blob([jsonData], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+  console.log('downloadExportedConversation called with:', jsonData?.length, 'characters');
+  
+  try {
+    const blob = new Blob([jsonData], { type: "application/json" });
+    console.log("Blob created:", blob.size, "bytes");
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `chat-export-${new Date().toISOString().split("T")[0]}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+    const url = URL.createObjectURL(blob);
+    console.log("URL created:", url);
 
-  URL.revokeObjectURL(url);
-  console.log("Conversation exported successfully");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `chat-export-${new Date().toISOString().split("T")[0]}.json`;
+    console.log("Download filename:", a.download);
+
+    document.body.appendChild(a);
+    console.log("Link added to DOM");
+
+    a.click();
+    console.log("Link clicked");
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log("Conversation exported successfully");
+  } catch (error) {
+    console.error('Error in downloadExportedConversation:', error);
+  }
 }
 
 // Event Listeners
