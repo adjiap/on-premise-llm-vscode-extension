@@ -39,6 +39,12 @@ function switchTab(tabName) {
   const tabIndex = tabName === "quick" ? 0 : 1;
   tabs[tabIndex].classList.add("active");
   document.getElementById(`${tabName}-tab`).classList.add("active");
+
+  // Show/hide import button based on active tab
+  const importControls = document.getElementById("importControls");
+  if (importControls) {
+    importControls.style.display = tabName === "saved" ? "flex" : "none";
+  }
 }
 
 /**

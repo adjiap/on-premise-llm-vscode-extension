@@ -17,6 +17,16 @@ body {
   padding: 20px;
 }
 
+/* Better spacing for VSCode buttons */
+vscode-button {
+  margin: 0 4px; /* Add some margin around all VSCode buttons */
+}
+
+/* Specific spacing for buttons with icons */
+vscode-button .codicon {
+  margin-right: 6px; /* Space between icon and text */
+}
+
 /* Main container layout */
 .chat-container {
   height: 90vh;
@@ -28,9 +38,22 @@ body {
 /* Model selection dropdown area */
 .model-selection {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.model-controls {
+  display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 15px;
+}
+
+.import-controls {
+  display: flex;
+  align-items: center;
 }
 
 @keyframes spin {
@@ -81,18 +104,28 @@ body {
 /* Input controls container */
 .input-container {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Ensure buttons in input container have consistent spacing */
+.input-container vscode-button {
+  margin: 0 2px;
+  min-width: fit-content;
 }
 
 /* Message input field */
-#messageInput {
+#quick-messageInput,
+#saved-messageInput {
   flex: 1;
+  /* Takes up all available space */
   padding: 10px;
   background: var(--vscode-input-background);
   border: 1px solid var(--vscode-input-border);
   color: var(--vscode-input-foreground);
   border-radius: 4px;
-}
+  margin-right: 8px; /* Space between input and first button */
+  }
 
 /* Tab navigation styles */
 .tab-container {
@@ -156,20 +189,4 @@ body {
 
 .tooltip-icon:hover {
   opacity: 1;
-}
-
-/* Import/Export button container */
-.import-export-container {
-  display: flex;
-  justify-content: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--vscode-panel-border);
-  margin-bottom: 10px;
-}
-
-.import-export-container:last-child {
-  border-bottom: none;
-  border-top: 1px solid var(--vscode-panel-border);
-  margin-bottom: 0;
-  margin-top: 10px;
 }
