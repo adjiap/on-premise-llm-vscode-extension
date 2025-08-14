@@ -1,4 +1,4 @@
-# on-premise-llm-openwebui-chat README
+# on-premise-llm-openwebui-assistant README
 
 ## Developer Setup
 
@@ -57,7 +57,7 @@ yo code
 # 
 
 # Navigate to project directory
-cd on-premise-llm-openwebui-chat
+cd on-premise-llm-openwebui-assistant
 
 # Fix VSCode types version (if needed, because somehow I got an error if I didn't)
 # Edit package.json and change "@types/vscode" from "^1.103.0" to "^1.85.0"
@@ -134,17 +134,17 @@ npm run compile
 
 # Package it 
 npx vsce package
-# You'll get something like `on-premise-llm-openwebui-chat-0.0.1.vsix`
+# You'll get something like `on-premise-llm-openwebui-assistant-0.0.1.vsix`
 ```
 
 And install/deinstall it using
 
 ```sh
 # Install
-code --install-extension on-premise-llm-openwebui-chat-0.0.1.vsix
+code --install-extension on-premise-llm-openwebui-assistant-0.0.1.vsix
 
 # Uninstall
-code --uninstall-extension adjiap.on-premise-llm-openwebui-chat
+code --uninstall-extension adjiap.on-premise-llm-openwebui-assistant
 ```
 
 **Enjoy!**

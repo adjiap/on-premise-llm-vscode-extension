@@ -31,13 +31,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('On-Premise LLM OpenWebUI Chat activated!');
+	console.log('On-Premise LLM OpenWebUI Assistant activated!');
 
 	/**
 	 * Registers the main chat command that opens the chat interface.
 	 * Handles configuration validation, service initialization, and webview setup.
 	 */
-	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-chat.openChat', async () => {
+	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-assistant.openChat', async () => {
     // Ensure valid configuration exists, prompt user if needed
     const config = await ConfigManager.ensureConfig();
     if (!config) {
@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Initialize OpenWebUI service with validated configuration
     const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
-    console.log("On-Premise LLM OpenWebUI Chat is active!");
+    console.log("On-Premise LLM OpenWebUI Assistant is active!");
 
     // Create persistence manager
     const persistenceManager = new PersistenceManager(context);
