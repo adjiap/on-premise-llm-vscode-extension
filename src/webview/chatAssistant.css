@@ -127,57 +127,6 @@ vscode-button .codicon {
   margin-right: 8px; /* Space between input and first button */
   }
 
-/* Tab navigation styles */
-.tab-container {
-  display: flex;
-  border-bottom: 1px solid var(--vscode-panel-border);
-  margin-bottom: 15px;
-}
-
-.tab {
-  padding: 10px 20px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  color: var(--vscode-foreground);
-  background: transparent;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  /* This spreads the text and icon */
-}
-
-.tab:hover {
-  background-color: var(--vscode-list-hoverBackground);
-}
-
-.tab.active {
-  border-bottom-color: var(--vscode-button-background);
-  background-color: var(--vscode-tab-activeBackground);
-  font-weight: bold;
-}
-
-/* Tab content styles */
-.tab-content {
-  display: none;
-  flex: 1;
-  flex-direction: column;
-  height: calc(90vh - 120px);
-}
-
-.tab-content.active {
-  display: flex;
-}
-
-/* Update messages to work within tab content */
-.tab-content .messages {
-  flex: 1;
-  overflow-y: auto;
-  border: 1px solid var(--vscode-panel-border);
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 4px;
-}
 
 /* Tool tip for descriptions */
 .title-with-tooltip {
@@ -208,7 +157,7 @@ vscode-button .codicon {
 
 .tooltip-content {
   visibility: hidden;
-  font-size: 24px;
+  width: 300px; /* Fixed width for wrapping */
   background-color: var(--vscode-editorHoverWidget-background);
   color: var(--vscode-editorHoverWidget-foreground);
   text-align: left;
@@ -246,7 +195,7 @@ vscode-button .codicon {
 }
 
 .chat-mode-icon {
-  font-size: 24;
+  font-size: 24px;
   transform: scale(2);
   margin-bottom: 15px;
   color: var(--vscode-foreground);
