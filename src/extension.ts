@@ -67,18 +67,22 @@ export function activate(context: vscode.ExtensionContext) {
       }
     );
 
-    // Add this after creating the panel and before the message handler
-    let savedChatHistory: Array<{
-      role: "user" | "assistant";
-      content: string;
-    }> = [];
+    // Initialize conversation history from saved state
+    let savedChatHistory = loadConversationHistory(context);
 
-    // Add system prompt to saved chat history if it exists
+    // Add system prompt if not already in history and config exists
     if (config.systemPrompt && config.systemPrompt.trim()) {
-      savedChatHistory.push({
-        role: "user",
-        content: config.systemPrompt,
-      });
+      const hasSystemPrompt =
+        savedChatHistory.length > 0 &&
+        savedChatHistory[0].role === "user" &&
+        savedChatHistory[0].content === config.systemPrompt;
+
+      if (!hasSystemPrompt) {
+        savedChatHistory.unshift({
+          role: "user",
+          content: config.systemPrompt,
+        });
+      }
     }
 
     // Set HTML Content
@@ -106,14 +110,15 @@ export function activate(context: vscode.ExtensionContext) {
               }
 
               console.log(
-                "Received message:", message.text,
-                "Chat type:", message.chatType
+                "Received message:",
+                message.text,
+                "Chat type:",
+                message.chatType
               );
 
-							let response: string;
+              let response: string;
 
-							if (message.chatType === "saved") {
-                // SAVED CHAT: Use conversation history
+              if (message.chatType === "saved") {
                 savedChatHistory.push({ role: "user", content: message.text });
 
                 response = await service.sendChat(
@@ -122,8 +127,10 @@ export function activate(context: vscode.ExtensionContext) {
                   "" // Don't pass systemPrompt separately since it's in history
                 );
 
-                // Add AI response to history
                 savedChatHistory.push({ role: "assistant", content: response });
+
+                // Auto-save after each message
+                saveConversationHistory(context, savedChatHistory);
               } else {
                 // QUICK CHAT: Single message (no memory)
                 response = await service.sendChat(
@@ -191,6 +198,9 @@ export function activate(context: vscode.ExtensionContext) {
                 content: config.systemPrompt,
               });
             }
+
+            // Clear saved state
+            saveConversationHistory(context, savedChatHistory);
             break;
         }
       },
@@ -273,6 +283,37 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
         <script src="${jsUri}"></script>
     </body>
     </html>`;
+}
+
+/**
+ * Saves conversation history to VSCode global state.
+ * @param context - Extension context for state storage
+ * @param convHistory - Conversation history to save
+ */
+function saveConversationHistory(
+  context: vscode.ExtensionContext,
+  convHistory: Array<{role: 'user' | 'assistant', content: string}>
+) {
+  const historyWithTimestamp = {
+    history: convHistory,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  context.globalState.update('savedChatHistory', historyWithTimestamp);
+}
+
+/**
+ * Loads conversation history from VSCode global state.
+ * @param context - Extension context for state storage
+ * @returns Saved conversation history or empty array
+ */
+function loadConversationHistory(context: vscode.ExtensionContext): Array<{role: 'user' | 'assistant', content: string}> {
+  const saved = context.globalState.get<{
+    history: Array<{role: 'user' | 'assistant', content: string}>,
+    lastUpdated: string
+  }>('savedChatHistory');
+
+  return saved?.history || [];
 }
 
 /**
