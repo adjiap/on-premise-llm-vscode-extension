@@ -157,3 +157,19 @@ body {
 .tooltip-icon:hover {
   opacity: 1;
 }
+
+/* Import/Export button container */
+.import-export-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  margin-bottom: 10px;
+}
+
+.import-export-container:last-child {
+  border-bottom: none;
+  border-top: 1px solid var(--vscode-panel-border);
+  margin-bottom: 0;
+  margin-top: 10px;
+}

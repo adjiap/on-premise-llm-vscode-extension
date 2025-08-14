@@ -18,6 +18,7 @@ interface WebviewMessage {
   models?: string[]; // Only for populating dropdown of models available
   error?: string;
   chatType?: string;
+  jsonData?: string;
 }
 
 /**
@@ -279,11 +280,24 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
           </div>
 
           <div id="saved-tab" class="tab-content">
+            <div class="import-export-container">
+              <vscode-button appearance="secondary" onclick="importConversation()">
+                <span class="codicon codicon-folder-opened"></span> Import Chat
+              </vscode-button>
+            </div>
+            
             <div class="messages" id="saved-messages"></div>
+            
             <div class="input-container">
               <input type="text" id="saved-messageInput" placeholder="Continue the conversation...">
               <button onclick="sendMessage('saved')">Send</button>
               <vscode-button appearance="secondary" onclick="clearMessages('saved')">Clear</vscode-button>
+            </div>
+            
+            <div class="import-export-container">
+              <vscode-button appearance="secondary" onclick="exportConversation()">
+                <span class="codicon codicon-save"></span> Export Chat
+              </vscode-button>
             </div>
           </div>
         </div>
