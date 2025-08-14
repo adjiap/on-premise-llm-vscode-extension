@@ -61,4 +61,36 @@ export class PersistenceManager {
       undefined
     );
   }
+
+  /**
+   * Exports conversation history as JSON string.
+   * @param history - Conversation history to export
+   * @returns JSON string of the conversation
+   */
+  exportConversation(convHistory: ConversationMessage[]): string {
+    const exportData = {
+      version: "1.0", // Arbitrary number to future-proof exported data types
+      exportDate: new Date().toISOString(),
+      extensionName: "On-Premise LLM Chat",
+      conversation: convHistory,
+    };
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * Imports conversation history from JSON string.
+   * @param jsonData - JSON string containing conversation data
+   * @returns Imported conversation history
+   */
+  importConversation(jsonData: string): ConversationMessage[] {
+    try {
+      const data = JSON.parse(jsonData);
+      if (data.conversation && Array.isArray(data.conversation)) {
+        return data.conversation;
+      }
+      throw new Error("Invalid conversation format");
+    } catch (error) {
+      throw new Error(`Failed to import conversation: ${error}`);
+    }
+  }
 }
