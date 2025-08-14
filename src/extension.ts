@@ -3,17 +3,21 @@
 import * as vscode from 'vscode';
 import { ConfigManager } from './configManager';
 import { OpenWebUIService } from './openwebuiService';
+import {
+  PersistenceManager,
+  ConversationMessage,
+} from "./utils/persistenceManager";
 
 /**
  * Message interface for communication between webview and extension.
  * Used for type-safe message passing in both directions.
  */
 interface WebviewMessage {
-    command: string;
-    text?: string;
-    models?: string[];  // Only for populating dropdown of models available
-    error?: string;
-		chatType?: string;
+  command: string;
+  text?: string;
+  models?: string[]; // Only for populating dropdown of models available
+  error?: string;
+  chatType?: string;
 }
 
 /**
@@ -44,6 +48,9 @@ export function activate(context: vscode.ExtensionContext) {
     const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
     console.log("On-Premise LLM OpenWebUI Chat is active!");
 
+    // Create persistence manager
+    const persistenceManager = new PersistenceManager(context);
+
     // Create status bar for user
     const statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right,
@@ -68,7 +75,8 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Initialize conversation history from saved state
-    let savedChatHistory = loadConversationHistory(context);
+    let savedChatHistory: ConversationMessage[] =
+      persistenceManager.loadConversationHistory();
 
     // Add system prompt if not already in history and config exists
     if (config.systemPrompt && config.systemPrompt.trim()) {
@@ -130,7 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
                 savedChatHistory.push({ role: "assistant", content: response });
 
                 // Auto-save after each message
-                saveConversationHistory(context, savedChatHistory);
+                persistenceManager.saveConversationHistory(savedChatHistory);
               } else {
                 // QUICK CHAT: Single message (no memory)
                 response = await service.sendChat(
@@ -200,7 +208,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Clear saved state
-            saveConversationHistory(context, savedChatHistory);
+            persistenceManager.saveConversationHistory(savedChatHistory);
             break;
         }
       },
@@ -283,37 +291,6 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
         <script src="${jsUri}"></script>
     </body>
     </html>`;
-}
-
-/**
- * Saves conversation history to VSCode global state.
- * @param context - Extension context for state storage
- * @param convHistory - Conversation history to save
- */
-function saveConversationHistory(
-  context: vscode.ExtensionContext,
-  convHistory: Array<{role: 'user' | 'assistant', content: string}>
-) {
-  const historyWithTimestamp = {
-    history: convHistory,
-    lastUpdated: new Date().toISOString(),
-  };
-
-  context.globalState.update('savedChatHistory', historyWithTimestamp);
-}
-
-/**
- * Loads conversation history from VSCode global state.
- * @param context - Extension context for state storage
- * @returns Saved conversation history or empty array
- */
-function loadConversationHistory(context: vscode.ExtensionContext): Array<{role: 'user' | 'assistant', content: string}> {
-  const saved = context.globalState.get<{
-    history: Array<{role: 'user' | 'assistant', content: string}>,
-    lastUpdated: string
-  }>('savedChatHistory');
-
-  return saved?.history || [];
 }
 
 /**
