@@ -292,6 +292,12 @@ window.addEventListener("message", (event) => {
  * Automatically fetches available models on startup.
  */
 window.addEventListener("load", () => {
+  // Get the default chat mode from the template
+  const defaultMode = "{{defaultChatMode}}";
+  if (defaultMode === "saved") {
+    switchTab("saved");
+  }
+
   refreshModels();
 });
 

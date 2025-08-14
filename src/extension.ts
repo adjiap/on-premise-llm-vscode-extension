@@ -33,11 +33,23 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('On-Premise LLM OpenWebUI Assistant activated!');
 
-	/**
-	 * Registers the main chat command that opens the chat interface.
-	 * Handles configuration validation, service initialization, and webview setup.
-	 */
-	const disposable = vscode.commands.registerCommand('on-premise-llm-openwebui-assistant.openChat', async () => {
+  const quickChatDisposable = vscode.commands.registerCommand(
+    "on-premise-llm-openwebui-assistant.openQuickChat",
+    async () => {
+      await openChatWindow("quick", context);
+    }
+  );
+
+  const savedChatDisposable = vscode.commands.registerCommand(
+    "on-premise-llm-openwebui-assistant.openSavedChat",
+    async () => {
+      await openChatWindow("saved", context);
+    }
+  );
+
+  context.subscriptions.push(quickChatDisposable, savedChatDisposable);
+
+  async function openChatWindow(chatMode: 'quick' | 'saved', context: vscode.ExtensionContext){
     // Ensure valid configuration exists, prompt user if needed
     const config = await ConfigManager.ensureConfig();
     if (!config) {
@@ -66,7 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Create and show webview panel
     const panel = vscode.window.createWebviewPanel(
       "onpremOpenwebuiChat",
-      "On-Prem OpenWebUI Chat",
+      chatMode === "quick" ? "Quick Chat Assistant" : "Saved Chat Assistant",
       vscode.ViewColumn.Two,
       {
         enableScripts: true,
@@ -95,7 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // Set HTML Content
-    panel.webview.html = getWebViewContent(panel.webview, context.extensionUri);
+    panel.webview.html = getWebViewContent(panel.webview, context.extensionUri, chatMode);
 
     // Handling messages from webview
     panel.webview.onDidReceiveMessage(
@@ -119,10 +131,8 @@ export function activate(context: vscode.ExtensionContext) {
               }
 
               console.log(
-                "Received message:",
-                message.text,
-                "Chat type:",
-                message.chatType
+                "Received message:", message.text,
+                "Chat type:", message.chatType
               );
 
               let response: string;
@@ -219,24 +229,33 @@ export function activate(context: vscode.ExtensionContext) {
                 persistenceManager.serializeConversation(savedChatHistory);
 
               const options: vscode.SaveDialogOptions = {
-                  defaultUri: vscode.Uri.file(`chat-export-${new Date().toISOString().split('T')[0]}.json`),
-                  filters: {
-                      'JSON files': ['json'],
-                      'All files': ['*']
-                  }
+                defaultUri: vscode.Uri.file(
+                  `chat-export-${new Date().toISOString().split("T")[0]}.json`
+                ),
+                filters: {
+                  "JSON files": ["json"],
+                  "All files": ["*"],
+                },
               };
-              
+
               const fileUri = await vscode.window.showSaveDialog(options);
               if (fileUri) {
-                  await vscode.workspace.fs.writeFile(fileUri, Buffer.from(exportData, 'utf8'));
-                  vscode.window.showInformationMessage(`Conversation exported to ${fileUri.fsPath}`);
-                  console.log("File saved to:", fileUri.fsPath);
+                await vscode.workspace.fs.writeFile(
+                  fileUri,
+                  Buffer.from(exportData, "utf8")
+                );
+                vscode.window.showInformationMessage(
+                  `Conversation exported to ${fileUri.fsPath}`
+                );
+                console.log("File saved to:", fileUri.fsPath);
               } else {
-                  console.log("Export cancelled by user");
+                console.log("Export cancelled by user");
               }
             } catch (error) {
-                console.error("Export error:", error);
-                vscode.window.showErrorMessage(`Failed to export conversation: ${error}`);
+              console.error("Export error:", error);
+              vscode.window.showErrorMessage(
+                `Failed to export conversation: ${error}`
+              );
             }
             break;
 
@@ -279,9 +298,8 @@ export function activate(context: vscode.ExtensionContext) {
       undefined,
       context.subscriptions
     );
-  });
+  }
 
-	context.subscriptions.push(disposable);
 }
 
 /**
@@ -290,10 +308,13 @@ export function activate(context: vscode.ExtensionContext) {
  * 
  * @param webview - The webview instance for resource URI generation
  * @param extensionUri - The extension's base URI for resource loading
+ * @param chatMode - The mode that the webview shows
  * @returns Complete HTML string for the chat interface
  */
-function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-	const getWebViewUri = (filename: string) =>
+function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, chatMode: string): string {
+	console.log("Open Chat Mode: ", chatMode);
+
+  const getWebViewUri = (filename: string) =>
 		webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'src', 'webview', filename));
 
 	// Instantiate URI for WebView elements
@@ -312,7 +333,8 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri): s
   // Replace placeholders with actual URIs
   return htmlContent
     .replace("{{cssUri}}", cssUri.toString())
-    .replace("{{jsUri}}", jsUri.toString());
+    .replace("{{jsUri}}", jsUri.toString())
+    .replace("{{chatMode}}", chatMode);
 }
 
 /**

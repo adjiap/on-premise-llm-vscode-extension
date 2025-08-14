@@ -20,8 +20,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "on-premise-llm-openwebui-assistant.openChat",
-        "title": "Opens On-Prem LLM OpenWebUI Chat"
+        "command": "on-premise-llm-openwebui-assistant.openQuickChat",
+        "title": "Quick Chat",
+        "category": "On-Premise LLM",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "on-premise-llm-openwebui-assistant.openSavedChat", 
+        "title": "Saved Chat",
+        "category": "On-Premise LLM",
+        "icon": "$(notebook)"
       }
     ],
     "configuration": {
