@@ -157,6 +157,92 @@ function clearMessages(chatType) {
   }
 }
 
+/**
+ * Exports the current saved chat conversation to a JSON file.
+ * Only available in Saved Chat tab.
+ */
+function exportConversation() {
+  console.log('Exporting conversation...');
+  
+  // Send command to extension to get conversation data
+  vscode.postMessage({
+    command: 'exportConversation'
+  });
+}
+
+/**
+ * Imports a conversation from a JSON file.
+ * Only available in Saved Chat tab.
+ */
+function importConversation() {
+  console.log('Importing conversation...');
+  
+  // Create file input element
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  
+  fileInput.onchange = function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const jsonData = e.target.result;
+          console.log('File read, sending to extension...');
+          
+          // Send the JSON data to extension for processing
+          vscode.postMessage({
+              command: 'importConversation',
+              jsonData: jsonData
+          });
+        } catch (error) {
+          console.error('Error reading file:', error);
+          // Could add user notification here
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+  
+  // Trigger file dialog
+  fileInput.click();
+}
+
+/**
+ * Displays imported messages in the saved chat.
+ * @param {Array} messages - Array of conversation messages
+ */
+function displayImportedMessages(messages) {
+  const savedMessages = document.getElementById('saved-messages');
+  savedMessages.innerHTML = ''; // Clear existing messages
+  
+  messages.forEach(message => {
+    if (message.role === 'user' || message.role === 'assistant') {
+      addMessage(message.content, message.role === 'user' ? 'user' : 'assistant', 'saved');
+    }
+  });
+}
+
+/**
+ * Triggers download of conversation export file.
+ * @param {string} jsonData - JSON string of conversation data
+ */
+function downloadConversationFile(jsonData) {
+  const blob = new Blob([jsonData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `chat-export-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  URL.revokeObjectURL(url);
+  console.log('Conversation exported successfully');
+}
+
 // Event Listeners
 
 /**
@@ -188,6 +274,21 @@ window.addEventListener("message", (event) => {
     if (button) {
       button.disabled = false;
     }
+  }
+
+  // Add new handlers for import/export
+  if (message.command === "exportData") {
+    downloadConversationFile(message.jsonData);
+  }
+
+  if (message.command === "importSuccess") {
+    displayImportedMessages(message.messages);
+    console.log("Conversation imported successfully");
+  }
+
+  if (message.command === "importError") {
+    console.error("Import failed:", message.error);
+    // You could add a user notification here
   }
 });
 
