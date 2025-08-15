@@ -97,11 +97,9 @@ export function activate(context: vscode.ExtensionContext) {
     }, 2000);
 
     const panelTitle =
-      chatMode === "prompt"
-        ? "Quick Prompt Assistant"
-        : chatMode === "quick"
-        ? "Quick Chat Assistant"
-        : "Saved Chat Assistant";
+      chatMode === "prompt" ? "Quick Prompt Assistant"
+    : chatMode === "quick" ? "Quick Chat Assistant"
+    : "Saved Chat Assistant";
 
     // Create and show webview panel
     const panel = vscode.window.createWebviewPanel(
@@ -118,6 +116,9 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize conversation history from saved state
     let savedChatHistory: ConversationMessage[] =
       await persistenceManager.loadConversationHistory();
+
+    // Initialize quickChatHistory
+    let quickChatHistory: ConversationMessage[] = [];
 
     // Add system prompt if not already in history and config exists
     if (config.systemPrompt && config.systemPrompt.trim()) {
@@ -162,12 +163,8 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
               }
 
-              console.log(
-                "Received message:",
-                message.text,
-                "Chat type:",
-                message.chatType
-              );
+              console.log("Received message:", message.text);
+              console.log("Chat type:", message.chatType);
 
               let response: string;
 
@@ -184,8 +181,17 @@ export function activate(context: vscode.ExtensionContext) {
 
                 // Auto-save after each message
                 persistenceManager.saveConversationHistory(savedChatHistory);
-              } else {
-                // QUICK CHAT: Single message (no memory)
+              } else if (message.chatType === "quick") {
+                quickChatHistory.push({ role: "user", content: message.text });
+                
+                response = await service.sendChat(
+                  quickChatHistory,
+                  config.defaultModel,
+                  "" // Don't pass systemPrompt separately since it's in history
+                );
+
+                quickChatHistory.push({ role: "assistant", content: response });
+              } else {  // chatType === "prompt"
                 response = await service.sendChat(
                   [{ role: "user", content: message.text }],
                   config.defaultModel,
@@ -196,14 +202,14 @@ export function activate(context: vscode.ExtensionContext) {
               // Send response back to webview
               console.log(
                 "Sending response with chatType:",
-                message.chatType || "quick"
+                message.chatType || "prompt" // Arbitrary default choice for defensive programming
               );
 
               panel.webview.postMessage({
                 command: "receiveMessage",
                 text: response,
                 sender: "assistant",
-                chatType: message.chatType || "quick",
+                chatType: message.chatType || "prompt",  
               });
             } catch (error) {
               console.error("Chat error:", error);
@@ -211,7 +217,7 @@ export function activate(context: vscode.ExtensionContext) {
                 command: "receiveMessage",
                 text: `Error: ${error}`,
                 sender: "assistant",
-                chatType: message.chatType || "quick",
+                chatType: message.chatType || "prompt",
               });
             }
             break;
@@ -240,20 +246,31 @@ export function activate(context: vscode.ExtensionContext) {
 
           // Clears all saved chat
           case "clearSavedChat":
-            // This will clear the conversation memory for saved chat
-            console.log("Clearing saved chat memory...");
-            savedChatHistory = [];
-
-            // Re-add system prompt if it exists
-            if (config.systemPrompt && config.systemPrompt.trim()) {
-              savedChatHistory.push({
-                role: "user",
-                content: config.systemPrompt,
-              });
+            // This will clear the conversation memory for saved chat and quick chat
+            console.log("Clearing chat memory...");
+            if (message.chatType === "saved"){
+              savedChatHistory = [];
+              // Re-add system prompt if it exists
+              if (config.systemPrompt && config.systemPrompt.trim()) {
+                savedChatHistory.push({
+                  role: "user",
+                  content: config.systemPrompt,
+                });
+              }
+              // Overwrites the emptied conversation.
+              await persistenceManager.saveConversationHistory(
+                savedChatHistory
+              );
+            } else if (message.chatType === "quick"){
+              quickChatHistory = [];
+              // Re-add system prompt if it exists
+              if (config.systemPrompt && config.systemPrompt.trim()) {
+                quickChatHistory.push({
+                  role: "user",
+                  content: config.systemPrompt,
+                });
+              }
             }
-
-            // Clear saved state
-            persistenceManager.saveConversationHistory(savedChatHistory);
             break;
 
           case "exportConversation":
@@ -376,7 +393,7 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
   
   const chatModeTooltip =
     chatMode === "prompt"
-      ? "Single prompts without any conversation memory (Incognito Mode). Each message is independent from another."
+      ? "AKA. Incognito Mode. Single prompts without any conversation memory. Each message is independent from any other."
   : chatMode === "quick"
       ? "Session chat with temporary memory. Messages will be automatically deleted when VSCode is closed."
   : "Continuous conversation with memory. Messages will be automatically saved into a JSON of your workspace.";

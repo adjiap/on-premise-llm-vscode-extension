@@ -127,10 +127,10 @@ function updateModelDropdown(models, error) {
  */
 function clearMessages(chatType) {
   const messages = document.getElementById(`${chatType}-messages`);
-  messages.innerHTML = "";
+  messages.innerHTML = ""; // Clears the UI for all modes
 
   // For saved chat, also send clear command to extension to reset memory
-  if (chatType === "saved") {
+  if (chatType === "saved" || chatType === "quick") {
     vscode.postMessage({
       command: "clearSavedChat",
     });
