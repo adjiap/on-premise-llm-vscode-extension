@@ -21,6 +21,9 @@ interface WebviewMessage {
   jsonData?: string;
 }
 
+// Initialize globalQuickChatHistory for session memory of VSCode
+let globalQuickChatHistory: ConversationMessage[] = [];
+
 /**
  * Called when the extension is activated.
  * Registers commands and sets up the extension's functionality.
@@ -117,9 +120,6 @@ export function activate(context: vscode.ExtensionContext) {
     let savedChatHistory: ConversationMessage[] =
       await persistenceManager.loadConversationHistory();
 
-    // Initialize quickChatHistory
-    let quickChatHistory: ConversationMessage[] = [];
-
     // Add system prompt if not already in history and config exists
     if (config.systemPrompt && config.systemPrompt.trim()) {
       const hasSystemPrompt =
@@ -163,9 +163,6 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
               }
 
-              console.log("Received message:", message.text);
-              console.log("Chat type:", message.chatType);
-
               let response: string;
 
               if (message.chatType === "saved") {
@@ -182,15 +179,18 @@ export function activate(context: vscode.ExtensionContext) {
                 // Auto-save after each message
                 persistenceManager.saveConversationHistory(savedChatHistory);
               } else if (message.chatType === "quick") {
-                quickChatHistory.push({ role: "user", content: message.text });
+                globalQuickChatHistory.push({ role: "user", content: message.text });
                 
                 response = await service.sendChat(
-                  quickChatHistory,
+                  globalQuickChatHistory,
                   config.defaultModel,
                   "" // Don't pass systemPrompt separately since it's in history
                 );
 
-                quickChatHistory.push({ role: "assistant", content: response });
+                globalQuickChatHistory.push({
+                  role: "assistant",
+                  content: response,
+                });
               } else {  // chatType === "prompt"
                 response = await service.sendChat(
                   [{ role: "user", content: message.text }],
@@ -246,9 +246,18 @@ export function activate(context: vscode.ExtensionContext) {
 
           // Clears all saved chat
           case "clearSavedChat":
+            console.log("=== CLEAR DEBUG ===");
+            console.log(
+              "Full clear message object:",
+              JSON.stringify(message, null, 2)
+            );
+            console.log("message.chatType:", message.chatType);
+            console.log("typeof message.chatType:", typeof message.chatType);
+
             // This will clear the conversation memory for saved chat and quick chat
             console.log("Clearing chat memory...");
             if (message.chatType === "saved"){
+              console.log("Clearing saved-chat memory...");
               savedChatHistory = [];
               // Re-add system prompt if it exists
               if (config.systemPrompt && config.systemPrompt.trim()) {
@@ -257,20 +266,23 @@ export function activate(context: vscode.ExtensionContext) {
                   content: config.systemPrompt,
                 });
               }
+              console.log("Emptied saved chat history:", savedChatHistory);
               // Overwrites the emptied conversation.
               await persistenceManager.saveConversationHistory(
                 savedChatHistory
               );
             } else if (message.chatType === "quick"){
-              quickChatHistory = [];
+              console.log("Clearing quick-chat memory...");
+              globalQuickChatHistory = [];
               // Re-add system prompt if it exists
               if (config.systemPrompt && config.systemPrompt.trim()) {
-                quickChatHistory.push({
+                globalQuickChatHistory.push({
                   role: "user",
                   content: config.systemPrompt,
                 });
               }
-            }
+              console.log("Emptied quick chat history:", globalQuickChatHistory);
+            };
             break;
 
           case "exportConversation":

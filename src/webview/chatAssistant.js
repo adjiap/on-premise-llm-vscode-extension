@@ -133,6 +133,7 @@ function clearMessages(chatType) {
   if (chatType === "saved" || chatType === "quick") {
     vscode.postMessage({
       command: "clearSavedChat",
+      chatType: chatType
     });
   }
 }
