@@ -28,6 +28,9 @@ export class PersistenceManager {
 
   /**
    * Saves conversation history to VSCode global state.
+   * FYI: the global state for persistenceManager is located in:
+   *      Windows: %APPDATA%\Code\User\globalStorage\<extension-id>\
+   *      Linux: ~/.config/Code/User/globalStorage/<extension-id>/
    * @param convHistory - Conversation history to save
    */
   saveConversationHistory(convHistory: ConversationMessage[]): void {

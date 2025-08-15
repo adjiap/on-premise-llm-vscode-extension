@@ -32,6 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
   // This line of code will only be executed once when your extension is activated
   console.log("On-Premise LLM OpenWebUI Assistant activated!");
 
+  // Clear saved chat history on extension activation (development safety)
+  // FYI: the global state for persistenceManager is located in:
+  //      Windows: %APPDATA%\Code\User\globalStorage\<extension-id>\
+  //      Linux: ~/.config/Code/User/globalStorage/<extension-id>/
+  const persistenceManager = new PersistenceManager(context);
+  persistenceManager.clearConversationHistory();
+  console.log("Cleared saved chat history on activation");
+
   const quickPromptDisposable = vscode.commands.registerCommand(
     "on-premise-llm-openwebui-assistant.openQuickPrompt",
     async () => {
@@ -96,10 +104,12 @@ export function activate(context: vscode.ExtensionContext) {
       statusBarItem.dispose();
     }, 2000);
 
-    const panelTitle = 
-      chatMode === "prompt" ? "Quick Prompt Assistant"
-    : chatMode === "quick" ? "Quick Chat Assistant"
-    : "Saved Chat Assistant";
+    const panelTitle =
+      chatMode === "prompt"
+        ? "Quick Prompt Assistant"
+        : chatMode === "quick"
+        ? "Quick Chat Assistant"
+        : "Saved Chat Assistant";
 
     // Create and show webview panel
     const panel = vscode.window.createWebviewPanel(
