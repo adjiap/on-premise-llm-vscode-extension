@@ -288,13 +288,37 @@ export function activate(context: vscode.ExtensionContext) {
           case "exportConversation":
             try {
               console.log("Exporting conversation...");
-              const exportData =
-                persistenceManager.serializeConversation(savedChatHistory);
 
-              const options: vscode.SaveDialogOptions = {
-                defaultUri: vscode.Uri.file(
-                  `chat-export-${new Date().toISOString().split("T")[0]}.json`
-                ),
+              // Determine which history to export, based on chat type
+              let historyToExport: ConversationMessage[];
+
+              if (message.chatType === "saved"){
+                historyToExport = savedChatHistory;
+              } else if (message.chatType === "quick"){
+                historyToExport = globalQuickChatHistory;
+              } else {
+                throw new Error(
+                  `unknown chat type for export: ${message.chatType}`
+                );
+              }
+
+              const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+              const exportData =
+                persistenceManager.serializeConversation(historyToExport);
+              const fileName = `chat-export-${new Date().toISOString().split("T")[0]}.json`
+              let defaultUri: vscode.Uri;
+
+              if (workspaceFolder) {
+                // Workspace exists - put file in workspace root
+                defaultUri = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
+              } else {
+                // No workspace - put file in system root (fallback)
+                defaultUri = vscode.Uri.file(fileName);
+              }
+              console.log("workspace is:", defaultUri);
+              
+              const options: vscode.SaveDialogOptions = {             
+                defaultUri,
                 filters: {
                   "JSON files": ["json"],
                   "All files": ["*"],
