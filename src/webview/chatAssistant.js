@@ -127,12 +127,13 @@ function updateModelDropdown(models, error) {
  */
 function clearMessages(chatType) {
   const messages = document.getElementById(`${chatType}-messages`);
-  messages.innerHTML = "";
+  messages.innerHTML = ""; // Clears the UI for all modes
 
   // For saved chat, also send clear command to extension to reset memory
-  if (chatType === "saved") {
+  if (chatType === "saved" || chatType === "quick") {
     vscode.postMessage({
       command: "clearSavedChat",
+      chatType: chatType
     });
   }
 }
@@ -274,7 +275,7 @@ window.addEventListener("load", () => {
  */
 document.addEventListener("DOMContentLoaded", () => {
   // Add Enter key listeners for both input fields
-  ["quick", "saved"].forEach((chatType) => {
+  ["quick", "saved", "prompt"].forEach((chatType) => {
     const input = document.getElementById(`${chatType}-messageInput`);
     if (input) {
       input.addEventListener("keypress", function (e) {

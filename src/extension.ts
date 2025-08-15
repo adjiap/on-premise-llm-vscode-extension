@@ -1,12 +1,12 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ConfigManager } from './utils/configManager';
-import { OpenWebUIService } from './utils/openwebuiService';
+import { ensureValidConfig } from './config/config';
+import { OpenWebUIService } from './services/openwebuiService';
 import {
   PersistenceManager,
   ConversationMessage,
-} from "./utils/persistenceManager";
+} from "./services/persistenceManager";
 
 /**
  * Message interface for communication between webview and extension.
@@ -21,6 +21,9 @@ interface WebviewMessage {
   jsonData?: string;
 }
 
+// Initialize globalQuickChatHistory for session memory of VSCode
+let globalQuickChatHistory: ConversationMessage[] = [];
+
 /**
  * Called when the extension is activated.
  * Registers commands and sets up the extension's functionality.
@@ -31,6 +34,13 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log("On-Premise LLM OpenWebUI Assistant activated!");
+
+  const quickPromptDisposable = vscode.commands.registerCommand(
+    "on-premise-llm-openwebui-assistant.openQuickPrompt",
+    async () => {
+      await openChatWindow("prompt", context);
+    }
+  );
 
   const quickChatDisposable = vscode.commands.registerCommand(
     "on-premise-llm-openwebui-assistant.openQuickChat",
@@ -46,7 +56,11 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(quickChatDisposable, savedChatDisposable);
+  context.subscriptions.push(
+    quickPromptDisposable,
+    quickChatDisposable,
+    savedChatDisposable
+  );
 
   /**
    * Opens a chat window in the specified mode (Quick or Saved Chat).
@@ -57,11 +71,11 @@ export function activate(context: vscode.ExtensionContext) {
    * @param context - VSCode extension context for accessing global state and resources
    */
   async function openChatWindow(
-    chatMode: "quick" | "saved",
+    chatMode: "prompt" | "quick" | "saved",
     context: vscode.ExtensionContext
   ) {
     // Ensure valid configuration exists, prompt user if needed
-    const config = await ConfigManager.ensureConfig();
+    const config = await ensureValidConfig();
     if (!config) {
       vscode.window.showErrorMessage("OpenWebUI Chat configuration cancelled.");
       return;
@@ -72,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("On-Premise LLM OpenWebUI Assistant is active!");
 
     // Create persistence manager
-    const persistenceManager = new PersistenceManager(context);
+    const persistenceManager = new PersistenceManager();
 
     // Create status bar for user
     const statusBarItem = vscode.window.createStatusBarItem(
@@ -85,10 +99,15 @@ export function activate(context: vscode.ExtensionContext) {
       statusBarItem.dispose();
     }, 2000);
 
+    const panelTitle =
+      chatMode === "prompt" ? "Quick Prompt Assistant"
+    : chatMode === "quick" ? "Quick Chat Assistant"
+    : "Saved Chat Assistant";
+
     // Create and show webview panel
     const panel = vscode.window.createWebviewPanel(
       "onpremOpenwebuiChat",
-      chatMode === "quick" ? "Quick Chat Assistant" : "Saved Chat Assistant",
+      panelTitle,
       vscode.ViewColumn.Two,
       {
         enableScripts: true,
@@ -99,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Initialize conversation history from saved state
     let savedChatHistory: ConversationMessage[] =
-      persistenceManager.loadConversationHistory();
+      await persistenceManager.loadConversationHistory();
 
     // Add system prompt if not already in history and config exists
     if (config.systemPrompt && config.systemPrompt.trim()) {
@@ -144,13 +163,6 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
               }
 
-              console.log(
-                "Received message:",
-                message.text,
-                "Chat type:",
-                message.chatType
-              );
-
               let response: string;
 
               if (message.chatType === "saved") {
@@ -166,8 +178,20 @@ export function activate(context: vscode.ExtensionContext) {
 
                 // Auto-save after each message
                 persistenceManager.saveConversationHistory(savedChatHistory);
-              } else {
-                // QUICK CHAT: Single message (no memory)
+              } else if (message.chatType === "quick") {
+                globalQuickChatHistory.push({ role: "user", content: message.text });
+                
+                response = await service.sendChat(
+                  globalQuickChatHistory,
+                  config.defaultModel,
+                  "" // Don't pass systemPrompt separately since it's in history
+                );
+
+                globalQuickChatHistory.push({
+                  role: "assistant",
+                  content: response,
+                });
+              } else {  // chatType === "prompt"
                 response = await service.sendChat(
                   [{ role: "user", content: message.text }],
                   config.defaultModel,
@@ -178,14 +202,14 @@ export function activate(context: vscode.ExtensionContext) {
               // Send response back to webview
               console.log(
                 "Sending response with chatType:",
-                message.chatType || "quick"
+                message.chatType || "prompt" // Arbitrary default choice for defensive programming
               );
 
               panel.webview.postMessage({
                 command: "receiveMessage",
                 text: response,
                 sender: "assistant",
-                chatType: message.chatType || "quick",
+                chatType: message.chatType || "prompt",  
               });
             } catch (error) {
               console.error("Chat error:", error);
@@ -193,7 +217,7 @@ export function activate(context: vscode.ExtensionContext) {
                 command: "receiveMessage",
                 text: `Error: ${error}`,
                 sender: "assistant",
-                chatType: message.chatType || "quick",
+                chatType: message.chatType || "prompt",
               });
             }
             break;
@@ -222,32 +246,79 @@ export function activate(context: vscode.ExtensionContext) {
 
           // Clears all saved chat
           case "clearSavedChat":
-            // This will clear the conversation memory for saved chat
-            console.log("Clearing saved chat memory...");
-            savedChatHistory = [];
+            console.log("=== CLEAR DEBUG ===");
+            console.log(
+              "Full clear message object:",
+              JSON.stringify(message, null, 2)
+            );
+            console.log("message.chatType:", message.chatType);
+            console.log("typeof message.chatType:", typeof message.chatType);
 
-            // Re-add system prompt if it exists
-            if (config.systemPrompt && config.systemPrompt.trim()) {
-              savedChatHistory.push({
-                role: "user",
-                content: config.systemPrompt,
-              });
-            }
-
-            // Clear saved state
-            persistenceManager.saveConversationHistory(savedChatHistory);
+            // This will clear the conversation memory for saved chat and quick chat
+            console.log("Clearing chat memory...");
+            if (message.chatType === "saved"){
+              console.log("Clearing saved-chat memory...");
+              savedChatHistory = [];
+              // Re-add system prompt if it exists
+              if (config.systemPrompt && config.systemPrompt.trim()) {
+                savedChatHistory.push({
+                  role: "user",
+                  content: config.systemPrompt,
+                });
+              }
+              console.log("Emptied saved chat history:", savedChatHistory);
+              // Overwrites the emptied conversation.
+              await persistenceManager.saveConversationHistory(
+                savedChatHistory
+              );
+            } else if (message.chatType === "quick"){
+              console.log("Clearing quick-chat memory...");
+              globalQuickChatHistory = [];
+              // Re-add system prompt if it exists
+              if (config.systemPrompt && config.systemPrompt.trim()) {
+                globalQuickChatHistory.push({
+                  role: "user",
+                  content: config.systemPrompt,
+                });
+              }
+              console.log("Emptied quick chat history:", globalQuickChatHistory);
+            };
             break;
 
           case "exportConversation":
             try {
               console.log("Exporting conversation...");
-              const exportData =
-                persistenceManager.serializeConversation(savedChatHistory);
 
-              const options: vscode.SaveDialogOptions = {
-                defaultUri: vscode.Uri.file(
-                  `chat-export-${new Date().toISOString().split("T")[0]}.json`
-                ),
+              // Determine which history to export, based on chat type
+              let historyToExport: ConversationMessage[];
+
+              if (message.chatType === "saved"){
+                historyToExport = savedChatHistory;
+              } else if (message.chatType === "quick"){
+                historyToExport = globalQuickChatHistory;
+              } else {
+                throw new Error(
+                  `unknown chat type for export: ${message.chatType}`
+                );
+              }
+
+              const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+              const exportData =
+                persistenceManager.serializeConversation(historyToExport);
+              const fileName = `chat-export-${new Date().toISOString().split("T")[0]}.json`
+              let defaultUri: vscode.Uri;
+
+              if (workspaceFolder) {
+                // Workspace exists - put file in workspace root
+                defaultUri = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
+              } else {
+                // No workspace - put file in system root (fallback)
+                defaultUri = vscode.Uri.file(fileName);
+              }
+              console.log("workspace is:", defaultUri);
+              
+              const options: vscode.SaveDialogOptions = {             
+                defaultUri,
                 filters: {
                   "JSON files": ["json"],
                   "All files": ["*"],
@@ -346,23 +417,36 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
   const htmlContent = require("fs").readFileSync(htmlUri.fsPath, "utf8");
 
   // Choose Icon for modes
-  const chatModeIcon = chatMode === "quick" ? "codicon-robot" : "codicon-notebook";
-  const chatModeTitle = chatMode === "quick" ? "Quick Chat" : "Saved Chat";
+  const chatModeIcon = 
+    chatMode === "prompt" ? "codicon-eye-closed" 
+  : chatMode === "quick" ? "codicon-comment" 
+  : "codicon-database";
+  
+  const chatModeTitle =
+    chatMode === "prompt" ? "Quick Prompt"
+  : chatMode === "quick" ? "Quick Chat"
+  : "Saved Chat";
+  
   const chatModeTooltip =
-    chatMode === "quick"
-      ? "Single prompts without conversation memory. Each message is independent from another."
-      : "Continuous conversation with memory. The AI remembers previous messages in the chat.";
+    chatMode === "prompt"
+      ? "AKA. Incognito Mode. Single prompts without any conversation memory. Each message is independent from any other."
+  : chatMode === "quick"
+      ? "Session chat with temporary memory. Messages will be automatically deleted when VSCode is closed."
+  : "Continuous conversation with memory. Messages will be automatically saved into a JSON of your workspace.";
+  
   const chatModePlaceholder =
-    chatMode === "quick"
-      ? "Ask a quick question..."
-      : "Continue the conversation...";
+    chatMode === "prompt" ? "Ask me anything. I'll forget afterwards..."
+  : chatMode === "quick" ? "Chat with me..."
+  : "Continue the conversation...";
+  
   const extraButtonsTop =
     chatMode === "saved" ?
       `<vscode-button appearance="secondary" onclick="importConversation()">
         <span class="codicon codicon-folder-opened"></span> Import Chat
       </vscode-button>` : "";
+
   const extraButtonsBottom =
-    chatMode === "saved" ?
+    (chatMode === "saved" || chatMode === "quick") ?
       `<vscode-button appearance="secondary" onclick="exportConversation()">
         <span class="codicon codicon-save"></span> Export
       </vscode-button>` : "";

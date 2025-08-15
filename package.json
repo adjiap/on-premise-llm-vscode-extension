@@ -20,16 +20,22 @@
   "contributes": {
     "commands": [
       {
+        "command": "on-premise-llm-openwebui-assistant.openQuickPrompt",
+        "title": "Quick Prompt",
+        "category": "On-Premise LLM",
+        "icon": "$(eye-closed)"
+      },
+      {
         "command": "on-premise-llm-openwebui-assistant.openQuickChat",
         "title": "Quick Chat",
         "category": "On-Premise LLM",
-        "icon": "$(robot)"
+        "icon": "$(comment)"
       },
       {
-        "command": "on-premise-llm-openwebui-assistant.openSavedChat", 
+        "command": "on-premise-llm-openwebui-assistant.openSavedChat",
         "title": "Saved Chat",
         "category": "On-Premise LLM",
-        "icon": "$(notebook)"
+        "icon": "$(database)"
       }
     ],
     "configuration": {
