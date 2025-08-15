@@ -274,7 +274,7 @@ window.addEventListener("load", () => {
  */
 document.addEventListener("DOMContentLoaded", () => {
   // Add Enter key listeners for both input fields
-  ["quick", "saved"].forEach((chatType) => {
+  ["quick", "saved", "prompt"].forEach((chatType) => {
     const input = document.getElementById(`${chatType}-messageInput`);
     if (input) {
       input.addEventListener("keypress", function (e) {

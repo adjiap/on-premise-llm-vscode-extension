@@ -166,6 +166,7 @@ body {
 }
 
 /* Message input field */
+#prompt-messageInput,
 #quick-messageInput,
 #saved-messageInput {
   flex: 1;

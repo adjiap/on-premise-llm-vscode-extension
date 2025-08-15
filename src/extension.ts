@@ -32,6 +32,13 @@ export function activate(context: vscode.ExtensionContext) {
   // This line of code will only be executed once when your extension is activated
   console.log("On-Premise LLM OpenWebUI Assistant activated!");
 
+  const quickPromptDisposable = vscode.commands.registerCommand(
+    "on-premise-llm-openwebui-assistant.openQuickPrompt",
+    async () => {
+      await openChatWindow("prompt", context);
+    }
+  );
+
   const quickChatDisposable = vscode.commands.registerCommand(
     "on-premise-llm-openwebui-assistant.openQuickChat",
     async () => {
@@ -46,7 +53,11 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(quickChatDisposable, savedChatDisposable);
+  context.subscriptions.push(
+    quickPromptDisposable,
+    quickChatDisposable,
+    savedChatDisposable
+  );
 
   /**
    * Opens a chat window in the specified mode (Quick or Saved Chat).
@@ -57,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
    * @param context - VSCode extension context for accessing global state and resources
    */
   async function openChatWindow(
-    chatMode: "quick" | "saved",
+    chatMode: "prompt" | "quick" | "saved",
     context: vscode.ExtensionContext
   ) {
     // Ensure valid configuration exists, prompt user if needed
@@ -85,10 +96,15 @@ export function activate(context: vscode.ExtensionContext) {
       statusBarItem.dispose();
     }, 2000);
 
+    const panelTitle = 
+      chatMode === "prompt" ? "Quick Prompt Assistant"
+    : chatMode === "quick" ? "Quick Chat Assistant"
+    : "Saved Chat Assistant";
+
     // Create and show webview panel
     const panel = vscode.window.createWebviewPanel(
       "onpremOpenwebuiChat",
-      chatMode === "quick" ? "Quick Chat Assistant" : "Saved Chat Assistant",
+      panelTitle,
       vscode.ViewColumn.Two,
       {
         enableScripts: true,
@@ -346,23 +362,36 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
   const htmlContent = require("fs").readFileSync(htmlUri.fsPath, "utf8");
 
   // Choose Icon for modes
-  const chatModeIcon = chatMode === "quick" ? "codicon-robot" : "codicon-notebook";
-  const chatModeTitle = chatMode === "quick" ? "Quick Chat" : "Saved Chat";
+  const chatModeIcon = 
+    chatMode === "prompt" ? "codicon-eye-closed" 
+  : chatMode === "quick" ? "codicon-comment" 
+  : "codicon-database";
+  
+  const chatModeTitle =
+    chatMode === "prompt" ? "Quick Prompt"
+  : chatMode === "quick" ? "Quick Chat"
+  : "Saved Chat";
+  
   const chatModeTooltip =
-    chatMode === "quick"
-      ? "Single prompts without conversation memory. Each message is independent from another."
-      : "Continuous conversation with memory. The AI remembers previous messages in the chat.";
+    chatMode === "prompt"
+      ? "Single prompts without any conversation memory (Incognito Mode). Each message is independent from another."
+  : chatMode === "quick"
+      ? "Session chat with temporary memory. Messages will be automatically deleted when VSCode is closed."
+  : "Continuous conversation with memory. Messages will be automatically saved into a JSON of your workspace.";
+  
   const chatModePlaceholder =
-    chatMode === "quick"
-      ? "Ask a quick question..."
-      : "Continue the conversation...";
+    chatMode === "prompt" ? "Ask me anything. I'll forget afterwards..."
+  : chatMode === "quick" ? "Chat with me..."
+  : "Continue the conversation...";
+  
   const extraButtonsTop =
     chatMode === "saved" ?
       `<vscode-button appearance="secondary" onclick="importConversation()">
         <span class="codicon codicon-folder-opened"></span> Import Chat
       </vscode-button>` : "";
+
   const extraButtonsBottom =
-    chatMode === "saved" ?
+    (chatMode === "saved" || chatMode === "quick") ?
       `<vscode-button appearance="secondary" onclick="exportConversation()">
         <span class="codicon codicon-save"></span> Export
       </vscode-button>` : "";
