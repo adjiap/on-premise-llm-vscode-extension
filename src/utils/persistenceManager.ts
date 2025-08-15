@@ -22,47 +22,69 @@ export interface SavedConversation {
  * Manages conversation history persistence using VSCode global state.
  */
 export class PersistenceManager {
-  private static readonly SAVED_CHAT_KEY = "savedChatHistory";
-
-  constructor(private context: vscode.ExtensionContext) {}
+  private static readonly CHAT_FILE_NAME = ".vscode-chat-history.json";
 
   /**
-   * Saves conversation history to VSCode global state.
-   * FYI: the global state for persistenceManager is located in:
-   *      Windows: %APPDATA%\Code\User\globalStorage\<extension-id>\
-   *      Linux: ~/.config/Code/User/globalStorage/<extension-id>/
+   * Gets the workspace chat file path
+   * @returns Chat history's file path
+   */
+  private getChatFilePath(): vscode.Uri | null {
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder){
+      return null; // currently no workspace open
+    }
+    return vscode.Uri.joinPath(workspaceFolder.uri, PersistenceManager.CHAT_FILE_NAME)
+  }
+
+  /**
+   * Saves conversation history to workspace file.
    * @param convHistory - Conversation history to save
    */
-  saveConversationHistory(convHistory: ConversationMessage[]): void {
-    const historyWithTimestamp: SavedConversation = {
+  async saveConversationHistory(convHistory: ConversationMessage[]): Promise<void> {
+    const filePath = this.getChatFilePath();
+    if (!filePath){
+      console.warn('No workspace open - cannot save chat history');
+      return;
+    }
+    
+    const saveData: SavedConversation ={
       history: convHistory,
       lastUpdated: new Date().toISOString(),
     };
-    this.context.globalState.update(
-      PersistenceManager.SAVED_CHAT_KEY,
-      historyWithTimestamp
-    );
+    
+    try {
+      const jsonData = JSON.stringify(saveData, null, 2);
+      await vscode.workspace.fs.writeFile(filePath, Buffer.from(jsonData, 'utf8'));
+      console.log (`Chat history saved to ${filePath.fsPath}`);
+    } catch (error){
+      console.error('Failed, to save chat history:', error);
+    }
   }
-
+  
   /**
-   * Loads conversation history from VSCode global state.
+   * Loads conversation history from workspace file.
    * @returns Saved conversation history or empty array
-   */
-  loadConversationHistory(): ConversationMessage[] {
-    const saved = this.context.globalState.get<SavedConversation>(
-      PersistenceManager.SAVED_CHAT_KEY
-    );
-    return saved?.history || [];
-  }
-
-  /**
-   * Clears saved conversation history.
-   */
-  clearConversationHistory(): void {
-    this.context.globalState.update(
-      PersistenceManager.SAVED_CHAT_KEY,
-      undefined
-    );
+  */
+ async loadConversationHistory(): Promise<ConversationMessage[]> {
+    const filePath = this.getChatFilePath();
+    if (!filePath) {
+      console.warn("No workspace open - cannot save chat history");
+      return [];
+    }
+    
+     try {
+       const fileData = await vscode.workspace.fs.readFile(filePath);
+       const jsonData = Buffer.from(fileData).toString("utf8");
+       const saved: SavedConversation = JSON.parse(jsonData);
+       console.log(`Chat history loaded from ${filePath.fsPath}`);
+       return saved.history || [];
+     } catch (error) {
+       console.log(
+         "No existing chat history file found or error reading:",
+         error
+       );
+       return [];
+     }
   }
 
   /**
