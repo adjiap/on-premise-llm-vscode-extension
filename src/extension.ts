@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ConfigManager } from './utils/configManager';
+import { ensureValidConfig } from './utils/config';
 import { OpenWebUIService } from './utils/openwebuiService';
 import {
   PersistenceManager,
@@ -75,7 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
     context: vscode.ExtensionContext
   ) {
     // Ensure valid configuration exists, prompt user if needed
-    const config = await ConfigManager.ensureConfig();
+    const config = await ensureValidConfig();
     if (!config) {
       vscode.window.showErrorMessage("OpenWebUI Chat configuration cancelled.");
       return;
