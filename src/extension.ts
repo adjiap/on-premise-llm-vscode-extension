@@ -1,12 +1,12 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ensureValidConfig } from './utils/config';
-import { OpenWebUIService } from './utils/openwebuiService';
+import { ensureValidConfig } from './config/config';
+import { OpenWebUIService } from './services/openwebuiService';
 import {
   PersistenceManager,
   ConversationMessage,
-} from "./utils/persistenceManager";
+} from "./services/persistenceManager";
 
 /**
  * Message interface for communication between webview and extension.
