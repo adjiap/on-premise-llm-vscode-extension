@@ -447,7 +447,7 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
 
   const extraButtonsBottom =
     (chatMode === "saved" || chatMode === "quick") ?
-      `<vscode-button appearance="secondary" onclick="exportConversation()">
+      `<vscode-button appearance="secondary" onclick="exportConversation('${chatMode}')">
         <span class="codicon codicon-save"></span> Export
       </vscode-button>` : "";
 

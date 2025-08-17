@@ -140,15 +140,19 @@ function clearMessages(chatType) {
 
 /**
  * Exports the current saved chat conversation to a JSON file.
- * Only available in Saved Chat tab.
+ * Only available in Quick Chat and Saved Chat mode.
+ * @param {string} chatType - Either 'prompt', 'quick' or 'saved' 
  */
-function exportConversation() {
+function exportConversation(chatType) {
   console.log('Exporting conversation...');
   
   // Send command to extension to get conversation data
-  vscode.postMessage({
-    command: 'exportConversation'
-  });
+  if (chatType === "saved" || chatType === "quick") {
+    vscode.postMessage({
+      command: 'exportConversation',
+      chatType: chatType
+    });
+  }
 }
 
 /**
