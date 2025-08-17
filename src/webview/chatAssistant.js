@@ -8,8 +8,9 @@
  * @since 2025-08-13
  *
  * Handles interface with Quick Chat and Saved Chat modes.
- * - Quick-Chat: Single message/response (no memory)
- * - Saved-Chat: Conversation with memory
+ * - Quick-Prompt: Single message/response (no memory)
+ * - Quick-Chat: Conversation with session-memory (temporary memory)
+ * - Saved-Chat: Conversation with memory (saved in workspace)
  * 
  * Communication Protocol:
  * - refreshModels: Request available models from OpenWebUI
@@ -44,7 +45,7 @@ function refreshModels() {
 
 /**
  * Sends user message to the LLM service.
- * @param {string} chatType - Either 'quick' or 'saved' to determine chat mode
+ * @param {string} chatType - Either 'prompt', 'quick' or 'saved' to determine chat mode
  */
 function sendMessage(chatType) {
   console.log("=== SENDMESSAGE JS DEBUG ===");
@@ -75,7 +76,7 @@ function sendMessage(chatType) {
  * Adds a message to the specified chat display.
  * @param {string} text - The message content to display
  * @param {string} sender - Message sender type ('user' or 'assistant')
- * @param {string} chatType - Either 'quick' or 'saved'
+ * @param {string} chatType - Either 'prompt', 'quick' or 'saved'
  */
 function addMessage(text, sender, chatType) {
   const messages = document.getElementById(`${chatType}-messages`);
@@ -123,7 +124,7 @@ function updateModelDropdown(models, error) {
 
 /**
  * Clears all messages from the specified chat display.
- * @param {string} chatType - Either 'quick' or 'saved'
+ * @param {string} chatType - Either 'prompt', 'quick' or 'saved'
  */
 function clearMessages(chatType) {
   const messages = document.getElementById(`${chatType}-messages`);
@@ -157,7 +158,7 @@ function exportConversation(chatType) {
 
 /**
  * Imports a conversation from a JSON file.
- * Only available in Saved Chat tab.
+ * Only available in Saved Chat mode.
  */
 function importConversation() {
   console.log('Importing conversation...');
