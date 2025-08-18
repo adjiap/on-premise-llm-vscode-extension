@@ -2,7 +2,7 @@
   "name": "on-premise-llm-openwebui-assistant",
   "displayName": "On-Premise LLM OpenWebUI Assistant",
   "description": "VSCode Extension to communicate with an On-Premise OpenWebUI Ollama model",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "adjiap",
   "repository": {
     "type": "git",
