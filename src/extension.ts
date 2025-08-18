@@ -182,7 +182,24 @@ export function activate(context: vscode.ExtensionContext) {
                 );
               }
 
-              ExtensionLogger.info("Using model:", modelToUse);
+              ExtensionLogger.info("Using model:", {
+                selected: message.selectedModel,
+                default: config.defaultModel,
+                final: modelToUse,
+              });
+
+              // Log system prompt being used
+              if (config.systemPrompt && config.systemPrompt.trim()) {
+                ExtensionLogger.debug("System prompt active", {
+                  systemPrompt: config.systemPrompt,
+                  promptLength: config.systemPrompt.length,
+                  chatType: message.chatType,
+                });
+              } else {
+                ExtensionLogger.debug("No system prompt configured", {
+                  chatType: message.chatType,
+                });
+              }
 
               let response: string;
 
