@@ -7,6 +7,7 @@ import {
   PersistenceManager,
   ConversationMessage,
 } from "./services/persistenceManager";
+import { ExtensionLogger } from './services/logger';
 
 /**
  * Message interface for communication between webview and extension.
@@ -32,9 +33,15 @@ let globalQuickChatHistory: ConversationMessage[] = [];
  * @param context - The extension context provided by VSCode
  */
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log("On-Premise LLM OpenWebUI Assistant activated!");
+  // Initialize logger first
+  ExtensionLogger.initialize(context);
+  ExtensionLogger.info("On-Premise LLM OpenWebUI Assistant activated!");
+
+  // For production
+  ExtensionLogger.configure({
+    level: 'info',
+    outputToConsole: false
+  });
 
   const quickPromptDisposable = vscode.commands.registerCommand(
     "on-premise-llm-openwebui-assistant.openQuickPrompt",
@@ -84,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Initialize OpenWebUI service with validated configuration
     const service = new OpenWebUIService(config.openwebuiUrl, config.apiKey);
-    console.log("On-Premise LLM OpenWebUI Assistant is active!");
+    ExtensionLogger.info("Chat Assistant mode:", chatMode);
 
     // Create persistence manager
     const persistenceManager = new PersistenceManager();
@@ -150,26 +157,29 @@ export function activate(context: vscode.ExtensionContext) {
           // Handles user chat message and get responses
           case "sendMessage":
             try {
-              console.log("=== SENDMESSAGE DEBUG ===");
-              console.log(
+              ExtensionLogger.debug("=== SENDMESSAGE DEBUG ===");
+              ExtensionLogger.debug(
                 "Full message object:",
                 JSON.stringify(message, null, 2)
               );
-              console.log("Message chatType:", message.chatType);
-              console.log("Message text:", message.text);
+              ExtensionLogger.info("Message chatType:", message.chatType);
+              ExtensionLogger.info("Message text:", message.text);
+              ExtensionLogger.info("System prompt:", config.systemPrompt);
 
               // Validate message
               if (!message.text || message.text.trim() === "") {
-                console.error("Empty message received");
+                ExtensionLogger.error("Empty message received");
                 return;
               }
 
               const modelToUse = message.selectedModel || config.defaultModel;
               if (!modelToUse) {
-                throw new Error("No model selected and no default model configured");
+                throw new Error(
+                  "No model selected and no default model configured"
+                );
               }
 
-              console.log("Using model:", modelToUse);
+              ExtensionLogger.info("Using model:", modelToUse);
 
               let response: string;
 
@@ -187,8 +197,11 @@ export function activate(context: vscode.ExtensionContext) {
                 // Auto-save after each message
                 persistenceManager.saveConversationHistory(savedChatHistory);
               } else if (message.chatType === "quick") {
-                globalQuickChatHistory.push({ role: "user", content: message.text });
-                
+                globalQuickChatHistory.push({
+                  role: "user",
+                  content: message.text,
+                });
+
                 response = await service.sendChat(
                   globalQuickChatHistory,
                   modelToUse,
@@ -199,7 +212,8 @@ export function activate(context: vscode.ExtensionContext) {
                   role: "assistant",
                   content: response,
                 });
-              } else {  // chatType === "prompt"
+              } else {
+                // chatType === "prompt"
                 response = await service.sendChat(
                   [{ role: "user", content: message.text }],
                   modelToUse,
@@ -208,7 +222,7 @@ export function activate(context: vscode.ExtensionContext) {
               }
 
               // Send response back to webview
-              console.log(
+              ExtensionLogger.debug(
                 "Sending response with chatType:",
                 message.chatType || "prompt" // Arbitrary default choice for defensive programming
               );
@@ -217,10 +231,10 @@ export function activate(context: vscode.ExtensionContext) {
                 command: "receiveMessage",
                 text: response,
                 sender: "assistant",
-                chatType: message.chatType || "prompt",  
+                chatType: message.chatType || "prompt",
               });
             } catch (error) {
-              console.error("Chat error:", error);
+              ExtensionLogger.error("Chat error:", error);
               panel.webview.postMessage({
                 command: "receiveMessage",
                 text: `Error: ${error}`,
@@ -233,9 +247,9 @@ export function activate(context: vscode.ExtensionContext) {
           // Fetches and updates available models list
           case "refreshModels":
             try {
-              console.log("Fetching available models...");
+              ExtensionLogger.debug("Fetching available models...");
               const models = await service.getAvailableModels();
-              console.log("Found models:", models);
+              ExtensionLogger.info("Found models:", models);
 
               // Send models back to webview
               panel.webview.postMessage({
@@ -243,7 +257,7 @@ export function activate(context: vscode.ExtensionContext) {
                 models: models,
               });
             } catch (error) {
-              console.error("Error fetching models:", error);
+              ExtensionLogger.error("Error fetching models:", error);
               panel.webview.postMessage({
                 command: "updateModels",
                 models: [], // Empty array on error
@@ -254,18 +268,18 @@ export function activate(context: vscode.ExtensionContext) {
 
           // Clears all saved chat
           case "clearSavedChat":
-            console.log("=== CLEAR DEBUG ===");
-            console.log(
+            ExtensionLogger.debug("=== CLEAR DEBUG ===");
+            ExtensionLogger.debug(
               "Full clear message object:",
               JSON.stringify(message, null, 2)
             );
-            console.log("message.chatType:", message.chatType);
-            console.log("typeof message.chatType:", typeof message.chatType);
+            ExtensionLogger.info("message.chatType:", message.chatType);
+            ExtensionLogger.info("typeof message.chatType:", typeof message.chatType);
 
             // This will clear the conversation memory for saved chat and quick chat
-            console.log("Clearing chat memory...");
-            if (message.chatType === "saved"){
-              console.log("Clearing saved-chat memory...");
+            ExtensionLogger.info("Clearing chat memory...");
+            if (message.chatType === "saved") {
+              ExtensionLogger.info("Clearing saved-chat memory...");
               savedChatHistory = [];
               // Re-add system prompt if it exists
               if (config.systemPrompt && config.systemPrompt.trim()) {
@@ -274,13 +288,13 @@ export function activate(context: vscode.ExtensionContext) {
                   content: config.systemPrompt,
                 });
               }
-              console.log("Emptied saved chat history:", savedChatHistory);
+              ExtensionLogger.debug("Emptied saved chat history:", savedChatHistory);
               // Overwrites the emptied conversation.
               await persistenceManager.saveConversationHistory(
                 savedChatHistory
               );
-            } else if (message.chatType === "quick"){
-              console.log("Clearing quick-chat memory...");
+            } else if (message.chatType === "quick") {
+              ExtensionLogger.info("Clearing quick-chat memory...");
               globalQuickChatHistory = [];
               // Re-add system prompt if it exists
               if (config.systemPrompt && config.systemPrompt.trim()) {
@@ -289,20 +303,23 @@ export function activate(context: vscode.ExtensionContext) {
                   content: config.systemPrompt,
                 });
               }
-              console.log("Emptied quick chat history:", globalQuickChatHistory);
-            };
+              ExtensionLogger.debug(
+                "Emptied quick chat history:",
+                globalQuickChatHistory
+              );
+            }
             break;
 
           case "exportConversation":
             try {
-              console.log("Exporting conversation...");
+              ExtensionLogger.info("Exporting conversation...");
 
               // Determine which history to export, based on chat type
               let historyToExport: ConversationMessage[];
 
-              if (message.chatType === "saved"){
+              if (message.chatType === "saved") {
                 historyToExport = savedChatHistory;
-              } else if (message.chatType === "quick"){
+              } else if (message.chatType === "quick") {
                 historyToExport = globalQuickChatHistory;
               } else {
                 throw new Error(
@@ -323,9 +340,9 @@ export function activate(context: vscode.ExtensionContext) {
                 // No workspace - put file in system root (fallback)
                 defaultUri = vscode.Uri.file(fileName);
               }
-              console.log("workspace is:", defaultUri);
-              
-              const options: vscode.SaveDialogOptions = {             
+              ExtensionLogger.debug("workspace is:", defaultUri);
+
+              const options: vscode.SaveDialogOptions = {
                 defaultUri,
                 filters: {
                   "JSON files": ["json"],
@@ -342,12 +359,12 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showInformationMessage(
                   `Conversation exported to ${fileUri.fsPath}`
                 );
-                console.log("File saved to:", fileUri.fsPath);
+                ExtensionLogger.info("File saved to:", fileUri.fsPath);
               } else {
-                console.log("Export cancelled by user");
+                ExtensionLogger.info("Export cancelled by user");
               }
             } catch (error) {
-              console.error("Export error:", error);
+              ExtensionLogger.error("Export error:", error);
               vscode.window.showErrorMessage(
                 `Failed to export conversation: ${error}`
               );
@@ -356,7 +373,7 @@ export function activate(context: vscode.ExtensionContext) {
 
           case "importConversation":
             try {
-              console.log("Importing conversation...");
+              ExtensionLogger.info("Importing conversation...");
 
               if (!message.jsonData) {
                 throw new Error("No data provided for import");
@@ -376,12 +393,12 @@ export function activate(context: vscode.ExtensionContext) {
                 messages: savedChatHistory,
               });
 
-              console.log(
+              ExtensionLogger.info(
                 "Conversation imported successfully, history length:",
                 savedChatHistory.length
               );
             } catch (error) {
-              console.error("Import error:", error);
+              ExtensionLogger.error("Import error:", error);
               panel.webview.postMessage({
                 command: "importError",
                 error: `Failed to import conversation: ${error}`,
@@ -406,7 +423,7 @@ export function activate(context: vscode.ExtensionContext) {
  * @returns Complete HTML string for the chat interface
  */
 function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, chatMode: string): string {
-	console.log("Open Chat Mode: ", chatMode);
+	ExtensionLogger.info("Open Chat Mode: ", chatMode);
 
   const getWebViewUri = (filename: string) =>
 		webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'src', 'webview', filename));
