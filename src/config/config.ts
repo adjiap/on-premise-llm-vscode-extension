@@ -15,7 +15,7 @@ export interface ChatConfig {
   systemPrompt?: string;    // optional
 }
 
-const EXTENSION_ID = "onPremiseLlmChat";
+export const EXTENSION_ID = "onPremiseLlmChat";
 
 /**
  * Function to read configuration from VSCode settings
