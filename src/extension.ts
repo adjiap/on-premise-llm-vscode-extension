@@ -19,6 +19,7 @@ interface WebviewMessage {
   error?: string;
   chatType?: string;
   jsonData?: string;
+  selectedModel?: string;
 }
 
 // Initialize globalQuickChatHistory for session memory of VSCode
@@ -162,6 +163,9 @@ export function activate(context: vscode.ExtensionContext) {
                 console.error("Empty message received");
                 return;
               }
+
+              const modelToUse = message.selectedModel || config.defaultModel;
+              console.log("Using model:", modelToUse);
 
               let response: string;
 

@@ -54,6 +54,9 @@ function sendMessage(chatType) {
   const input = document.getElementById(`${chatType}-messageInput`);
   const text = input.value.trim();
 
+  const modelSelect = document.getElementById("modelSelect");
+  const selectedModel = modelSelect.value || null;
+
   if (text) {
     // Display user message immediately
     addMessage(text, "user", chatType);
@@ -61,6 +64,7 @@ function sendMessage(chatType) {
       command: "sendMessage",
       text: text,
       chatType: chatType, // Add this to distinguish between quick/saved
+      selectedModel: selectedModel,
     };
 
     // Send to extension with chat type information
