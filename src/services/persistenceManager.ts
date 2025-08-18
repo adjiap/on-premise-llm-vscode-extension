@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { ExtensionLogger } from "./logger";
 
 
 /**
@@ -43,7 +44,7 @@ export class PersistenceManager {
   async saveConversationHistory(convHistory: ConversationMessage[]): Promise<void> {
     const filePath = this.getChatFilePath();
     if (!filePath){
-      console.warn('No workspace open - cannot save chat history');
+      ExtensionLogger.warn('No workspace open - cannot save chat history');
       return;
     }
     
@@ -55,9 +56,9 @@ export class PersistenceManager {
     try {
       const jsonData = JSON.stringify(saveData, null, 2);
       await vscode.workspace.fs.writeFile(filePath, Buffer.from(jsonData, 'utf8'));
-      console.log (`Chat history saved to ${filePath.fsPath}`);
+      ExtensionLogger.info (`Chat history saved to ${filePath.fsPath}`);
     } catch (error){
-      console.error('Failed, to save chat history:', error);
+      ExtensionLogger.error('Failed, to save chat history:', error);
     }
   }
   
@@ -68,7 +69,7 @@ export class PersistenceManager {
  async loadConversationHistory(): Promise<ConversationMessage[]> {
     const filePath = this.getChatFilePath();
     if (!filePath) {
-      console.warn("No workspace open - cannot save chat history");
+      ExtensionLogger.warn("No workspace open - cannot save chat history");
       return [];
     }
     
@@ -76,10 +77,10 @@ export class PersistenceManager {
        const fileData = await vscode.workspace.fs.readFile(filePath);
        const jsonData = Buffer.from(fileData).toString("utf8");
        const saved: SavedConversation = JSON.parse(jsonData);
-       console.log(`Chat history loaded from ${filePath.fsPath}`);
+       ExtensionLogger.info(`Chat history loaded from ${filePath.fsPath}`);
        return saved.history || [];
      } catch (error) {
-       console.log(
+       ExtensionLogger.error(
          "No existing chat history file found or error reading:",
          error
        );
