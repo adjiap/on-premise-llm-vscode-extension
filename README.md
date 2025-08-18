@@ -51,7 +51,7 @@ The On-Premise LLM OpenWebUI Assistant is a VSCode extension that provides seaml
 It is built for programming enthusiasts/professionals that require AI assistance while maintaining complete control over their data and infrastructure,
 by implementing local LLM via Ollama+OpenWebUI solution
 
-> [!INFO]
+> [!NOTE]
 > I am aware of GitHub Copilot, Windsurf, Cursor, or Claude Code. But none of them were able to satisfy my curiosity
 > nor my needs for the local LLM that can talk with my local workspace, and also utilizing my own AI infrastructure
 
