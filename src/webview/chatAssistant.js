@@ -48,7 +48,7 @@ function refreshModels() {
  * @param {string} chatType - Either 'prompt', 'quick' or 'saved' to determine chat mode
  */
 function sendMessage(chatType) {
-  console.log("=== SENDMESSAGE JS DEBUG ===");
+  console.log("=== SEND MESSAGE JS DEBUG ===");
   console.log("chatType parameter:", chatType);
 
   const input = document.getElementById(`${chatType}-messageInput`);
@@ -99,10 +99,18 @@ function addMessage(text, sender, chatType) {
  * @param {string} error - Error message if model loading failed
  */
 function updateModelDropdown(models, error) {
+  console.log("=== UPDATE MODEL DROPDOWN JS DEBUG ===");
+  console.log("Models received:", models);
+  console.log("Error received:", error);
+  console.log("Models type:", typeof models);
+  console.log("Models length:", models?.length);
+
   const dropdown = document.getElementById("modelSelect");
+  console.log("Dropdown element found:", !!dropdown);  // Convert any `dropdown` value to boolean
   dropdown.innerHTML = "";
 
   if (error) {
+    console.log("Showing error in dropdwon");
     const option = document.createElement("vscode-option");
     option.value = "";
     option.textContent = "Error loading models";
@@ -111,6 +119,7 @@ function updateModelDropdown(models, error) {
   }
 
   if (models.length === 0) {
+    console.log("No models found, showing 'No models found'");
     const option = document.createElement("vscode-option");
     option.value = "";
     option.textContent = "No models found";
@@ -118,12 +127,15 @@ function updateModelDropdown(models, error) {
     return;
   }
 
+  console.log("Adding models to dropdown:");
   models.forEach((model) => {
     const option = document.createElement("vscode-option");
     option.value = model;
     option.textContent = model;
     dropdown.appendChild(option);
   });
+
+  console.log("Dropdown update complete");
 }
 
 /**

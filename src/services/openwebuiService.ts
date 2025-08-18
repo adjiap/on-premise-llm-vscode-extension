@@ -159,10 +159,19 @@ export class OpenWebUIService {
 
   async getAvailableModels(): Promise<string[]> {
     try {
+      console.log("=== GET AVAILABLE MODELS DEBUG ===");
+      console.log("Making request to /ollama/api/tags");
+
       const response = await this.makeRequest('/ollama/api/tags');
-      return response.models?.map((model: any) => model.name) || [];
+      console.log("Raw API response:", response);
+      console.log("Response type:", typeof response);
+      console.log("Response keys:", Object.keys(response || {}));
+
+      const models = response.models?.map((model: any) => model.name) || [];
+      console.log("Extracted model names:", models);
+      return models;
     } catch (error) {
-      console.error('Error fetching models:', error);
+      console.error("Error in getAvailableModels:", error);
       return [];
     }
   }
