@@ -1,6 +1,7 @@
 import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
+import { ExtensionLogger } from './logger';
 
 /**
  * Represents a chat message in the conversation.
@@ -120,7 +121,7 @@ export class OpenWebUIService {
    */
   async sendChat(messages: ChatMessage[], model: string, systemPrompt?: string): Promise<string> {
     if (!model) {
-      throw new Error('Model name is required')
+      throw new Error('Model name is required');
     }
 
     try {
@@ -152,17 +153,26 @@ export class OpenWebUIService {
 
       return response.message.content;
     } catch (error) {
-      console.error('OpenWebUI API Error:', error);
+      ExtensionLogger.error('OpenWebUI API Error:', error);
       throw new Error(`Failed to get response from Ollama: ${error}`);
     }
   }
 
   async getAvailableModels(): Promise<string[]> {
     try {
+      ExtensionLogger.debug("=== GET AVAILABLE MODELS DEBUG ===");
+      ExtensionLogger.debug("Making request to /ollama/api/tags");
+
       const response = await this.makeRequest('/ollama/api/tags');
-      return response.models?.map((model: any) => model.name) || [];
+      ExtensionLogger.debug("Raw API response:", response);
+      ExtensionLogger.debug("Response type:", typeof response);
+      ExtensionLogger.debug("Response keys:", Object.keys(response || {}));
+
+      const models = response.models?.map((model: any) => model.name) || [];
+      ExtensionLogger.info("Extracted model names:", models);
+      return models;
     } catch (error) {
-      console.error('Error fetching models:', error);
+      ExtensionLogger.error("Error in getAvailableModels:", error);
       return [];
     }
   }

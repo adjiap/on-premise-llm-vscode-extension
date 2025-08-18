@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ollama Assistant</title>
+	<script type="module" src="https://unpkg.com/@vscode/webview-ui-toolkit@1.2.2/dist/toolkit.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@latest/dist/codicon.css">
+	<link rel="stylesheet" href="{{cssUri}}">
+</head>
+<body>
+	<div class="chat-container">
+		<div class="chat-mode-header">
+			<div class="icon-title-stack">
+				<span class="codicon {{chatModeIcon}} chat-mode-icon"></span>
+				<div class="title-with-tooltip">
+					<h2>{{chatModeTitle}}</h2>
+					<span class="custom-tooltip">
+						<span class="codicon codicon-question tooltip-trigger"></span>
+						<div class="tooltip-content">{{chatModeTooltip}}</div>
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="model-selection">
+			<div class="model-controls">
+				<label for="modelSelect">Model:</label>
+				<vscode-dropdown id="modelSelect">
+					<vscode-option value="">Loading models...</vscode-option>
+				</vscode-dropdown>
+				<vscode-button appearance="secondary" onclick="refreshModels()" id="refreshButton">
+					<span class="codicon codicon-repo-sync" id="refreshIcon"></span>
+				</vscode-button>
+			</div>
+
+			<div class="extra-controls-top">
+				{{extraButtonsTop}}
+			</div>
+		</div>
+
+		<div class="single-chat-content">
+			<div class="messages" id="{{chatMode}}-messages"></div>
+			<div class="input-container">
+				<input type="text" id="{{chatMode}}-messageInput" placeholder="{{chatModePlaceholder}}">
+				<vscode-button onclick="sendMessage('{{chatMode}}')">Send</vscode-button>
+				<vscode-button appearance="secondary" onclick="clearMessages('{{chatMode}}')">Clear</vscode-button>
+				{{extraButtonsBottom}}
+			</div>
+		</div>
+	</div>
+
+	<script src="{{jsUri}}"></script>
+</body>
+</html>

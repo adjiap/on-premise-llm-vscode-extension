@@ -8,74 +8,208 @@
  * @since 2025-08-13
  */
 
-/* Base layout and theme integration */
+/* =====BASE LAYOUT & THEME===== */
 body {
-    font-family: var(--vscode-font-family);
-    color: var(--vscode-foreground);
-    background-color: var(--vscode-editor-background);
-    margin: 0;
-    padding: 20px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-editor-background);
+  margin: 0;
+  padding: 20px;
 }
 
 /* Main container layout */
 .chat-container {
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    max-width: 800px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 800px;
 }
 
-/* Model selection dropdown area */
+/* ===== CHAT MODE HEADER ===== */
+/* Anything about chat mode title */
+.chat-mode-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.icon-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chat-mode-icon {
+  font-size: 24px;
+  /* Base size for codicon scaling */
+  transform: scale(2);
+  /* Scale up for prominence */
+  margin-bottom: 15px;
+  color: var(--vscode-foreground);
+}
+
+/* ===== CUSTOM TOOLTIPS ===== */
+/* Tool tip for descriptions */
+.title-with-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Small space between title and tooltip */
+}
+
+.title-with-tooltip h2 {
+  margin: 0;
+}
+
+.custom-tooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.tooltip-trigger {
+  cursor: help;
+  opacity: 0.6;
+}
+
+.tooltip-trigger:hover {
+  opacity: 1;
+}
+
+.tooltip-content {
+  visibility: hidden;
+  width: 300px;
+  /* Fixed width for wrapping */
+  background-color: var(--vscode-editorHoverWidget-background);
+  color: var(--vscode-editorHoverWidget-foreground);
+  text-align: left;
+  border: 1px solid var(--vscode-editorHoverWidget-border);
+  border-radius: 4px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  /* Position above the icon */
+  left: 50%;
+  margin-left: -150px;
+  /* Center it */
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  /* Allow text wrapping */
+}
+
+.custom-tooltip:hover .tooltip-content {
+  visibility: visible;
+}
+
+/* ===== MODEL SELECTION AREA ===== */
 .model-selection {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
-/* Scrollable messages area */
+.model-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.extra-controls-top {
+  display: flex;
+  align-items: center;
+}
+
+/* ===== SCROLLABLE MESSAGES AREA ===== */
 .messages {
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid var(--vscode-panel-border);
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--vscode-panel-border);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
 }
 
 /* Individual message styling */
 .message {
-    margin-bottom: 12px;
-    padding: 8px;
-    border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 4px;
 }
 
 /* User message appearance */
 .message.user {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    margin-left: 20%;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  margin-left: 20%;
 }
 
 /* Assistant message appearance */
 .message.assistant {
-    background-color: var(--vscode-input-background);
-    border: 1px solid var(--vscode-input-border);
-    margin-right: 20%;
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  margin-right: 20%;
 }
 
-/* Input controls container */
+/* ===== INPUT CONTROLS ===== */
 .input-container {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* Message input field */
-#messageInput {
-    flex: 1;
-    padding: 10px;
-    background: var(--vscode-input-background);
-    border: 1px solid var(--vscode-input-border);
-    color: var(--vscode-input-foreground);
-    border-radius: 4px;
+#prompt-messageInput,
+#quick-messageInput,
+#saved-messageInput {
+  flex: 1;
+  /* Takes up all available space */
+  padding: 10px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  color: var(--vscode-input-foreground);
+  border-radius: 4px;
+  margin-right: 8px;
+  /* Space between input and first button */
+}
+
+/* ===== VSCODE BUTTON STYLING ===== */
+/* Better spacing for VSCode buttons */
+vscode-button {
+  margin: 0 4px;
+  /* Add some margin around all VSCode buttons */
+}
+
+/* Specific spacing for buttons with icons */
+vscode-button .codicon {
+  margin-right: 6px;
+  /* Space between icon and text */
+}
+
+/* Ensure buttons in input container have consistent spacing */
+.input-container vscode-button {
+  margin: 0 2px;
+  min-width: fit-content;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
 }

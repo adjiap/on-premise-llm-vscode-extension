@@ -1,8 +1,8 @@
 {
-  "name": "on-premise-llm-openwebui-chat",
-  "displayName": "On-Premise LLM OpenWebUI Chat",
+  "name": "on-premise-llm-openwebui-assistant",
+  "displayName": "On-Premise LLM OpenWebUI Assistant",
   "description": "VSCode Extension to communicate with an On-Premise OpenWebUI Ollama model",
-  "version": "0.4.0",
+  "version": "0.5.2",
   "publisher": "adjiap",
   "repository": {
     "type": "git",
@@ -20,12 +20,26 @@
   "contributes": {
     "commands": [
       {
-        "command": "on-premise-llm-openwebui-chat.openChat",
-        "title": "Opens On-Prem LLM OpenWebUI Chat"
+        "command": "on-premise-llm-openwebui-assistant.openQuickPrompt",
+        "title": "Quick Prompt",
+        "category": "On-Premise LLM Chat Assistant",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "on-premise-llm-openwebui-assistant.openQuickChat",
+        "title": "Quick Chat",
+        "category": "On-Premise LLM Chat Assistant",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "on-premise-llm-openwebui-assistant.openSavedChat",
+        "title": "Saved Chat",
+        "category": "On-Premise LLM Chat Assistant",
+        "icon": "$(database)"
       }
     ],
     "configuration": {
-      "title": "On-Premise LLM OpenWebUI Chat",
+      "title": "On-Premise LLM OpenWebUI Assistant",
       "properties": {
         "onPremiseLlmChat.openwebuiUrl": {
           "type": "string",
