@@ -19,6 +19,7 @@ interface WebviewMessage {
   error?: string;
   chatType?: string;
   jsonData?: string;
+  selectedModel?: string;
 }
 
 // Initialize globalQuickChatHistory for session memory of VSCode
@@ -163,6 +164,13 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
               }
 
+              const modelToUse = message.selectedModel || config.defaultModel;
+              if (!modelToUse) {
+                throw new Error("No model selected and no default model configured");
+              }
+
+              console.log("Using model:", modelToUse);
+
               let response: string;
 
               if (message.chatType === "saved") {
@@ -170,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                 response = await service.sendChat(
                   savedChatHistory, // Send full conversation history
-                  config.defaultModel,
+                  modelToUse,
                   "" // Don't pass systemPrompt separately since it's in history
                 );
 
@@ -183,7 +191,7 @@ export function activate(context: vscode.ExtensionContext) {
                 
                 response = await service.sendChat(
                   globalQuickChatHistory,
-                  config.defaultModel,
+                  modelToUse,
                   "" // Don't pass systemPrompt separately since it's in history
                 );
 
@@ -194,7 +202,7 @@ export function activate(context: vscode.ExtensionContext) {
               } else {  // chatType === "prompt"
                 response = await service.sendChat(
                   [{ role: "user", content: message.text }],
-                  config.defaultModel,
+                  modelToUse,
                   config.systemPrompt
                 );
               }
