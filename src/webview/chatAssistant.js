@@ -98,7 +98,7 @@ function addMessage(text, sender, chatType) {
  * @param {string[]} models - Array of available model names
  * @param {string} error - Error message if model loading failed
  */
-function updateModelDropdown(models, error) {
+function updateModelDropdown(models, error, defaultModel, isDefaultModelValid) {
   console.log("=== UPDATE MODEL DROPDOWN JS DEBUG ===");
   console.log("Models received:", models);
   console.log("Error received:", error);
@@ -132,7 +132,31 @@ function updateModelDropdown(models, error) {
     const option = document.createElement("vscode-option");
     option.value = model;
     option.textContent = model;
+
+    // Pre-select the default model if it's valid
+    if (model === defaultModel && isDefaultModelValid) {
+      option.selected = true;
+    }
+
     dropdown.appendChild(option);
+
+    // Log model validation results
+    if (defaultModel && !isDefaultModelValid) {
+      console.error(
+        "Default model not available",
+        {
+          defaultModel,
+          availableModels: models,
+        },
+        true
+      ); // Send to extension
+    } else {
+      console.info("Models loaded successfully", {
+        modelCount: models.length,
+        defaultModel: defaultModel,
+        defaultModelValid: isDefaultModelValid,
+      });
+    }
   });
 
   console.log("Dropdown update complete");
@@ -252,13 +276,19 @@ window.addEventListener("message", (event) => {
 
   if (message.command === "updateModels") {
     console.log("Received updateModels, stopping spinner...");
-    updateModelDropdown(message.models, message.error);
+    updateModelDropdown(
+      message.models,
+      message.error,
+      message.defaultModel,
+      message.isDefaultModelValid,
+    );
 
     // Stops spinning animation
     const icon = document.getElementById("refreshIcon");
     const button = document.getElementById("refreshButton");
 
     console.log("Icon found:", !!icon, "Button found:", !!button);
+
     if (icon) {
       icon.classList.remove("spinning");
       console.log("Removed spinning class");

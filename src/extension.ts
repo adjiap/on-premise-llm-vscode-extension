@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { ensureValidConfig } from './config/config';
+import { ensureValidConfig, EXTENSION_ID } from './config/config';
 import { OpenWebUIService } from './services/openwebuiService';
 import {
   PersistenceManager,
@@ -21,6 +21,9 @@ interface WebviewMessage {
   chatType?: string;
   jsonData?: string;
   selectedModel?: string;
+  // Model validation fields
+  defaultModel?: string;
+  isDefaultModelValid?: boolean;
 }
 
 // Initialize globalQuickChatHistory for session memory of VSCode
@@ -249,19 +252,100 @@ export function activate(context: vscode.ExtensionContext) {
             try {
               ExtensionLogger.debug("Fetching available models...");
               const models = await service.getAvailableModels();
-              ExtensionLogger.info("Found models:", models);
+              ExtensionLogger.info("Models retrieved:", {
+                modelCount: models.length,
+                models: models,
+              });
+
+              // Validate default model against available models
+              const defaultModel = config.defaultModel;
+              const isDefaultModelAvailable = models.includes(defaultModel);
+
+              if (!isDefaultModelAvailable && models.length > 0) {
+                ExtensionLogger.warn(
+                  "Default model not found in available models",
+                  {
+                    defaultModel: defaultModel,
+                    availableModels: models,
+                    recommendation:
+                      "Update default model in settings or ensure model is installed in Ollama",
+                  }
+                );
+
+                // Show error message to user
+                vscode.window
+                  .showWarningMessage(
+                    `Default model "${defaultModel}" is not available. Available models: ${models.join(
+                      ", "
+                    )}`,
+                    "Update Settings",
+                    "Ignore"
+                  )
+                  .then((selection) => {
+                    if (selection === "Update Settings") {
+                      vscode.commands.executeCommand(
+                        "workbench.action.openSettings",
+                        "onPremiseLlmChat.defaultModel"
+                      );
+                    }
+                  });
+              } else if (models.length === 0) {
+                ExtensionLogger.error("No models available from OpenWebUI", {
+                  defaultModel: defaultModel,
+                  suggestion:
+                    "Install models using 'ollama pull <model-name>' or check OpenWebUI connection",
+                });
+
+                vscode.window
+                  .showErrorMessage(
+                    "No models available from OpenWebUI. Please install models using Ollama or check your connection.",
+                    "Open Settings"
+                  )
+                  .then((selection) => {
+                    if (selection === "Open Settings") {
+                      vscode.commands.executeCommand(
+                        "workbench.action.openSettings",
+                        EXTENSION_ID,
+                      );
+                    }
+                  });
+              } else {
+                ExtensionLogger.debug("Default model validation passed", {
+                  defaultModel: defaultModel,
+                  isAvailable: true,
+                });
+              }
 
               // Send models back to webview
               panel.webview.postMessage({
                 command: "updateModels",
                 models: models,
+                defaultModel: defaultModel,
+                isDefaultModelValid: isDefaultModelAvailable,
               });
             } catch (error) {
               ExtensionLogger.error("Error fetching models:", error);
+
+              vscode.window
+                .showErrorMessage(
+                  `Failed to load models: ${error}. Check OpenWebUI connection and API key.`,
+                  "Check Settings"
+                )
+                .then((selection) => {
+                  if (selection === "Check Settings") {
+                    vscode.commands.executeCommand(
+                      "workbench.action.openSettings",
+                      EXTENSION_ID,
+                    );
+                  }
+                });
+              
               panel.webview.postMessage({
                 command: "updateModels",
                 models: [], // Empty array on error
                 error: "Failed to load models",
+                defaultModel: config.defaultModel,
+                isDefaultModelValid: false,
               });
             }
             break;
