@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.1] - 2025-08-18
 
+### Added
+- More logging for developer using ExtensionLogger in `src/services/logger.ts`
+
+### Changed
+- Export EXTENSION_ID variable overall
+
+## [0.5.1] - 2025-08-18
+
 ### Fixed
 - Fixed major bug to actually have the chosen model used for prompting
 
