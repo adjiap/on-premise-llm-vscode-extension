@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-08-18
+
+### Fixed
+- Fixed major bug to actually have the chosen model used for prompting
+
 ## [0.5.0] - 2025-08-15
 
 ### Added
