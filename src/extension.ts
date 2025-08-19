@@ -40,11 +40,25 @@ export function activate(context: vscode.ExtensionContext) {
   ExtensionLogger.initialize(context);
   ExtensionLogger.info("On-Premise LLM OpenWebUI Assistant activated!");
 
-  // For production
-  ExtensionLogger.configure({
-    level: 'info',
-    outputToConsole: false
-  });
+  // Configure logger based on environment
+  if (context.extensionMode === vscode.ExtensionMode.Development) {
+    // Development mode (F5 debugging)
+    ExtensionLogger.configure({
+      level: "debug",
+      outputToConsole: true,
+      outputToChannel: true,
+    });
+    ExtensionLogger.debug(
+      "Running in Development Mode - Debug logging enabled"
+    );
+  } else {
+    // Production mode (installed .vsix)
+    ExtensionLogger.configure({
+      level: "info",
+      outputToConsole: false,
+      outputToChannel: true,
+    });
+  }
 
   const quickPromptDisposable = vscode.commands.registerCommand(
     "on-prem-llm-assistant.openQuickPrompt",
@@ -111,9 +125,11 @@ export function activate(context: vscode.ExtensionContext) {
     }, 2000);
 
     const panelTitle =
-      chatMode === "prompt" ? "Quick Prompt Assistant"
-    : chatMode === "quick" ? "Quick Chat Assistant"
-    : "Saved Chat Assistant";
+      chatMode === "prompt"
+        ? "Quick Prompt Assistant"
+        : chatMode === "quick"
+        ? "Quick Chat Assistant"
+        : "Saved Chat Assistant";
 
     // Create and show webview panel
     const panel = vscode.window.createWebviewPanel(
@@ -322,7 +338,7 @@ export function activate(context: vscode.ExtensionContext) {
                     if (selection === "Open Settings") {
                       vscode.commands.executeCommand(
                         "workbench.action.openSettings",
-                        EXTENSION_ID,
+                        EXTENSION_ID
                       );
                     }
                   });
@@ -352,11 +368,11 @@ export function activate(context: vscode.ExtensionContext) {
                   if (selection === "Check Settings") {
                     vscode.commands.executeCommand(
                       "workbench.action.openSettings",
-                      EXTENSION_ID,
+                      EXTENSION_ID
                     );
                   }
                 });
-              
+
               panel.webview.postMessage({
                 command: "updateModels",
                 models: [], // Empty array on error
@@ -375,7 +391,10 @@ export function activate(context: vscode.ExtensionContext) {
               JSON.stringify(message, null, 2)
             );
             ExtensionLogger.info("message.chatType:", message.chatType);
-            ExtensionLogger.info("typeof message.chatType:", typeof message.chatType);
+            ExtensionLogger.info(
+              "typeof message.chatType:",
+              typeof message.chatType
+            );
 
             // This will clear the conversation memory for saved chat and quick chat
             ExtensionLogger.info("Clearing chat memory...");
@@ -389,7 +408,10 @@ export function activate(context: vscode.ExtensionContext) {
                   content: config.systemPrompt,
                 });
               }
-              ExtensionLogger.debug("Emptied saved chat history:", savedChatHistory);
+              ExtensionLogger.debug(
+                "Emptied saved chat history:",
+                savedChatHistory
+              );
               // Overwrites the emptied conversation.
               await persistenceManager.saveConversationHistory(
                 savedChatHistory
@@ -431,7 +453,9 @@ export function activate(context: vscode.ExtensionContext) {
               const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
               const exportData =
                 persistenceManager.serializeConversation(historyToExport);
-              const fileName = `chat-export-${new Date().toISOString().split("T")[0]}.json`
+              const fileName = `chat-export-${
+                new Date().toISOString().split("T")[0]
+              }.json`;
               let defaultUri: vscode.Uri;
 
               if (workspaceFolder) {
