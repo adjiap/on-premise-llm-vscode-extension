@@ -47,21 +47,21 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const quickPromptDisposable = vscode.commands.registerCommand(
-    "on-premise-llm-openwebui-assistant.openQuickPrompt",
+    "on-prem-llm-assistant.openQuickPrompt",
     async () => {
       await openChatWindow("prompt", context);
     }
   );
 
   const quickChatDisposable = vscode.commands.registerCommand(
-    "on-premise-llm-openwebui-assistant.openQuickChat",
+    "on-prem-llm-assistant.openQuickChat",
     async () => {
       await openChatWindow("quick", context);
     }
   );
 
   const savedChatDisposable = vscode.commands.registerCommand(
-    "on-premise-llm-openwebui-assistant.openSavedChat",
+    "on-prem-llm-assistant.openSavedChat",
     async () => {
       await openChatWindow("saved", context);
     }
