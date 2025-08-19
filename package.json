@@ -65,9 +65,10 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile && npm run copy-webview",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "copy-webview": "copyfiles -u 1 \"src/webview/**/*.{html,css,js}\" out/",
+    "watch": "tsc -watch -p ./ && npm run copy-webview",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"
