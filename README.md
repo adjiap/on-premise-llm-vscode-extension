@@ -11,7 +11,7 @@
     <a href="#about-the-project">About The Project</a>
     <ul>
       <li><a href="#key-features">Key Features</a></li>
-      <li><a href="#chat-modes">Chat Modes</a></li>
+      <li><a href="#chat-modes-features">Chat Modes Features</a></li>
     </ul>
   </li>
   <li>
@@ -27,7 +27,7 @@
     <ul>
       <li><a href="#quick-start">Quick Start</a></li>
       <li><a href="#chat-modes-usage">Chat Modes Usage</a></li>
-      <li><a href="#import-export">Import/Export</a></li>
+      <li><a href="#importexport">Import/Export</a></li>
     </ul>
   </li>
   <li>
@@ -65,10 +65,10 @@ by implementing local LLM via Ollama+OpenWebUI solution
 - ✅ **Enterprise-ready security** with API key authentication
 - ✅ **Zero external dependencies** - works entirely with your on-premise infrastructure
 
-### Chat Modes
+### Chat Modes Features
 
 > [!NOTE]
-> See the screenshots below for comparison of each modes
+> See the screenshots below in (usage)[#usage] for comparison of each modes
 
 #### 🔒 Quick Prompt (Incognito Mode)
 - **Truly stateless** - no conversation memory
@@ -126,13 +126,32 @@ curl -H "Authorization: Bearer $OPENWEBUI_API_KEY" \
 
 #### Manual Installation (.vsix file)
 
+##### Linux
 ```bash
 # Download the latest release
-wget https://github.com/adjiap/on-prem-llm-assistant/releases/latest/download/on-prem-llm-assistant.vsix
+## (Recommended) Using GitHub CLI
+gh release download -R adjiap/on-premise-llm-vscode-extension -p "*.vsix"
+
+## Using `wget`, change the version if needed
+wget https://github.com/adjiap/on-premise-llm-vscode-extension/releases/download/v0.5.3/on-prem-llm-assistant-0.5.3.vsix
 
 # Install using VSCode CLI
 code --install-extension on-prem-llm-assistant.vsix
 ```
+
+##### Windows
+```powershell
+# Download the latest release
+## (Recommended) Using GitHub CLI
+gh release download -R adjiap/on-premise-llm-vscode-extension -p "*.vsix"
+
+## Using `Invoke-WebRequest`, change the version if needed
+Invoke-WebRequest https://github.com/adjiap/on-premise-llm-vscode-extension/releases/download/v0.5.3/on-prem-llm-assistant-0.5.3.vsix
+
+# Install using VSCode CLI
+code --install-extension on-prem-llm-assistant-0.5.3.vsix
+```
+
 
 ### Configuration
 
