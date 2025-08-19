@@ -1,11 +1,48 @@
+# Development files
 .vscode/**
 .vscode-test/**
 src/**
+node_modules/**
+
+# Config files
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/eslint.config.mjs
+**/.eslintrc.*
+webpack.config.js
+
+# Source maps and TypeScript files
 **/*.map
 **/*.ts
+!out/**/*.js
+
+# Test files
+**/test/**
 **/.vscode-test.*
+
+# Documentation and misc
+CHANGELOG.md
+# docs/**  # This is intentionally going to be added, because the README.md uses images from here.
+
+# Package management
+package-lock.json
+yarn.lock
+.npmrc
+
+# Build artifacts
+dist/**
+build/**
+coverage/**
+*.tsbuildinfo
+
+# IDE files
+.idea/**
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
