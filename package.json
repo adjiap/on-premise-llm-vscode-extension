@@ -1,8 +1,8 @@
 {
-  "name": "on-premise-llm-openwebui-assistant",
+  "name": "on-prem-llm-assistant",
   "displayName": "On-Premise LLM OpenWebUI Assistant",
   "description": "VSCode Extension to communicate with an On-Premise OpenWebUI Ollama model",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "publisher": "adjiap",
   "repository": {
     "type": "git",
@@ -20,19 +20,19 @@
   "contributes": {
     "commands": [
       {
-        "command": "on-premise-llm-openwebui-assistant.openQuickPrompt",
+        "command": "on-prem-llm-assistant.openQuickPrompt",
         "title": "Quick Prompt",
         "category": "On-Premise LLM Chat Assistant",
         "icon": "$(eye-closed)"
       },
       {
-        "command": "on-premise-llm-openwebui-assistant.openQuickChat",
+        "command": "on-prem-llm-assistant.openQuickChat",
         "title": "Quick Chat",
         "category": "On-Premise LLM Chat Assistant",
         "icon": "$(comment)"
       },
       {
-        "command": "on-premise-llm-openwebui-assistant.openSavedChat",
+        "command": "on-prem-llm-assistant.openSavedChat",
         "title": "Saved Chat",
         "category": "On-Premise LLM Chat Assistant",
         "icon": "$(database)"
@@ -65,9 +65,10 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile && npm run copy-webview",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "copy-webview": "copyfiles -u 1 \"src/webview/**/*.{html,css,js}\" out/",
+    "watch": "tsc -watch -p ./ && npm run copy-webview",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"

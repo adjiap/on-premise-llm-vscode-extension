@@ -101,45 +101,90 @@ class ExtensionLogger {
     return new Date().toISOString().replace("T", " ").substring(0, 23);
   }
 
+  /**
+   * Checks if a log level should be output based on current configuration.
+   * @private
+   */
+  private static shouldLog(
+    level: keyof typeof ExtensionLogger.LOG_LEVELS
+  ): boolean {
+    return (
+      ExtensionLogger.LOG_LEVELS[level] >=
+      ExtensionLogger.LOG_LEVELS[this.config.level]
+    );
+  }
+
   static debug(message: string, data?: any) {
+    if (!this.shouldLog("debug")) {
+      return;
+    };
+
     const timestamp = this.formatTimestamp();
     const logMessage = data
       ? `[${timestamp}] [DEBUG] ${message}\n${JSON.stringify(data, null, 2)}`
       : `[${timestamp}] [DEBUG] ${message}`;
 
-    console.log(logMessage);
-    this.outputChannel?.appendLine(logMessage);
+    if (this.config.outputToConsole) {
+      console.log(logMessage);
+    }
+    if (this.config.outputToChannel) {
+      this.outputChannel?.appendLine(logMessage);
+    }
   }
-  
+
   static info(message: string, data?: any) {
+    if (!this.shouldLog("info")) {
+      return;
+    }
+
     const timestamp = this.formatTimestamp();
     const logMessage = data
       ? `[${timestamp}] [INFO] ${message}\n${JSON.stringify(data, null, 2)}`
       : `[${timestamp}] [INFO] ${message}`;
-      
+
+    if (this.config.outputToConsole) {
       console.log(logMessage);
+    }
+    if (this.config.outputToChannel) {
       this.outputChannel?.appendLine(logMessage);
     }
-    
+  }
+
   static warn(message: string, data?: any) {
+    if (!this.shouldLog("warn")) {
+      return;
+    }
+
     const timestamp = this.formatTimestamp();
     const logMessage = data
       ? `[${timestamp}] [WARNING] ${message}\n${JSON.stringify(data, null, 2)}`
       : `[${timestamp}] [WARNING] ${message}`;
 
-    console.warn(logMessage);
-    this.outputChannel?.appendLine(logMessage);
+    if (this.config.outputToConsole) {
+      console.warn(logMessage);
+    }
+    if (this.config.outputToChannel) {
+      this.outputChannel?.appendLine(logMessage);
+    }
   }
 
   static error(message: string, error?: any) {
+    if (!this.shouldLog("error")) {
+      return;
+    }
+
     const timestamp = this.formatTimestamp();
     const logMessage = error
       ? `[${timestamp}] [ERROR] ${message}\n${error.stack || error.toString()}`
       : `[${timestamp}] [ERROR] ${message}`;
 
-    console.error(logMessage);
-    this.outputChannel?.appendLine(logMessage);
-    this.outputChannel?.show(); // Auto-show on errors
+    if (this.config.outputToConsole) {
+      console.error(logMessage);
+    }
+    if (this.config.outputToChannel) {
+      this.outputChannel?.appendLine(logMessage);
+      this.outputChannel?.show(); // Auto-show on errors
+    }
   }
 }
 

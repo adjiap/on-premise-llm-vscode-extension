@@ -128,10 +128,10 @@ curl -H "Authorization: Bearer $OPENWEBUI_API_KEY" \
 
 ```bash
 # Download the latest release
-wget https://github.com/adjiap/on-premise-llm-openwebui-assistant/releases/latest/download/on-premise-llm-openwebui-assistant.vsix
+wget https://github.com/adjiap/on-prem-llm-assistant/releases/latest/download/on-prem-llm-assistant.vsix
 
 # Install using VSCode CLI
-code --install-extension on-premise-llm-openwebui-assistant.vsix
+code --install-extension on-prem-llm-assistant.vsix
 ```
 
 ### Configuration
@@ -246,7 +246,7 @@ npm install -g yo generator-code @vscode/vsce
 
 # Clone and setup project
 git clone <repository-url>
-cd on-premise-llm-openwebui-assistant
+cd on-prem-llm-assistant
 npm install
 
 # For enhanced WebView development
@@ -309,17 +309,17 @@ npm run compile
 
 # Package extension
 npx vsce package
-# Output: on-premise-llm-openwebui-assistant-x.y.z.vsix
+# Output: on-prem-llm-assistant-x.y.z.vsix
 ```
 
 #### Install/Uninstall Locally
 
 ```bash
 # Install locally
-code --install-extension on-premise-llm-openwebui-assistant-0.5.0.vsix
+code --install-extension on-prem-llm-assistant-0.5.0.vsix
 
 # Uninstall
-code --uninstall-extension adjiap.on-premise-llm-openwebui-assistant
+code --uninstall-extension adjiap.on-prem-llm-assistant
 ```
 
 ## Troubleshooting
