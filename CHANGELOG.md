@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.1] - 2025-08-18
+## [0.5.3] - 2025-08-19
+
+### Added
+
+- Build script for copying webview files to output directory during packaging
+- Optimized `.vscodeignore` to exclude unnecessary files from packaged extension
+- Added `.npmrc` for creating standardized commit messages for each release
+- Add logger configuration for both developer and end-user
+
+### Changed
+
+- Extension name shortened from `on-premise-llm-openwebui-assistant` to `on-prem-llm-assistant` for better usability
+- Updated `.gitignore` for improved development workflow
+
+### Fixed
+
+- Critical packaging bug: Fixed hardcoded `src/` paths to use `out/` folder for packaged extension compatibility
+- Webview resource loading now works correctly in both development (F5) and packaged (.vsix) environments
+  - Webview files now correctly copied to out/webview/ during build process
+- Extension now properly loads HTML, CSS, and JavaScript files when installed from .vsix package
+- Add missing logging level filtering for `src/services/logger.ts`
+
+## [0.5.2] - 2025-08-18
 
 ### Added
 - More logging for developer using ExtensionLogger in `src/services/logger.ts`
