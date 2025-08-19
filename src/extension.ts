@@ -527,14 +527,14 @@ function getWebViewContent(webview: vscode.Webview, extensionUri: vscode.Uri, ch
 	ExtensionLogger.info("Open Chat Mode: ", chatMode);
 
   const getWebViewUri = (filename: string) =>
-		webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'src', 'webview', filename));
+		webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'webview', filename));
 
 	// Instantiate URI for WebView elements
 	const cssUri = getWebViewUri("chatAssistant.css");
 	const jsUri = getWebViewUri("chatAssistant.js");
   const htmlUri = vscode.Uri.joinPath(
     extensionUri,
-    "src",
+    "out",
     "webview",
     "chatAssistant.html"
   );
